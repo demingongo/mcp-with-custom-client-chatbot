@@ -85,3 +85,13 @@ MCP server:
 cd backend && npm run build && npm start
 cd mcp-server && npm run build && npm start
 ```
+
+## Docker Compose
+
+_Note: With the default model (`gemma4:latest`), the image requires **10 GB of disk space** and will use at least **12 GB of RAM** to load and run effectively. Ensure your Docker environment is configured with sufficient resources. Update the `OLLAMA_MODEL` in `model.env` if you want to use a smaller model. Update `docker-compose.yml` if you want to [enable GPU support](https://docs.ollama.com/docker)._
+
+```bash
+docker-compose --env-file model.env up --build -d
+```
+
+On first run, the backend may fail until Ollama finishes pulling the model. Check logs with `docker-compose logs -f ollama` and wait for the "llama runner started" message. Ollama will persist the model locally in `.docker-compose/ollama/data`, so subsequent runs should be faster.
