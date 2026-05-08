@@ -21,12 +21,24 @@ ConnectAuz product assistant — a local chat app that answers questions about [
 - [backend/](backend/) — Express orchestrator on `:3000`. Receives chat messages, calls Ollama, parses tool-call JSON from the model, invokes MCP tools, loops until the model produces a final answer.
 - [mcp-server/](mcp-server/) — Express MCP server on `:3001` exposing the product catalog ([products.json](mcp-server/src/data/products.json)) via an MCP tool surface (`list_products`, `get_product`, `search_products`, `list_categories`, `products_by_category`).
 
-## Prerequisites
+## Run with Docker Compose
+
+_Note: With the default model (`gemma4:latest`), the image requires **10 GB of disk space** and will use at least **12 GB of RAM** to load and run effectively. Ensure your Docker environment is configured with sufficient resources. Update the `OLLAMA_MODEL` in `model.env` if you want to use a smaller model. Update `docker-compose.yml` if you want to [enable GPU support](https://docs.ollama.com/docker)._
+
+```bash
+docker-compose --env-file model.env up --build -d
+```
+
+On first run, the backend may fail until Ollama finishes pulling the model. Check logs with `docker-compose logs -f ollama` and wait for the "llama runner started" message. Ollama will persist the model locally in `.docker-compose/ollama/data`, so subsequent runs should be faster.
+
+## Run locally without Docker
+
+### Prerequisites
 
 - Node.js 20+
 - [Ollama](https://ollama.com) running locally with a model pulled (default: `gemma4:latest`)
 
-## Setup
+### Setup
 
 Install dependencies in each service:
 
@@ -35,7 +47,7 @@ cd backend && npm install
 cd ../mcp-server && npm install
 ```
 
-## Run
+### Run
 
 Start each service in its own terminal:
 
@@ -51,6 +63,13 @@ cd frontend && python3 -m http.server 8080
 ```
 
 Open http://localhost:8080.
+
+### Build
+
+```bash
+cd backend && npm run build && npm start
+cd mcp-server && npm run build && npm start
+```
 
 ## Configuration
 
@@ -78,20 +97,3 @@ MCP server:
 - `GET  /mcp/tools` — tool definitions
 - `POST /mcp/invoke` — body `{ tool, arguments }`
 - `GET  /products`, `/products/:id`, `/products/search?q=`, `/products/categories`
-
-## Build
-
-```bash
-cd backend && npm run build && npm start
-cd mcp-server && npm run build && npm start
-```
-
-## Docker Compose
-
-_Note: With the default model (`gemma4:latest`), the image requires **10 GB of disk space** and will use at least **12 GB of RAM** to load and run effectively. Ensure your Docker environment is configured with sufficient resources. Update the `OLLAMA_MODEL` in `model.env` if you want to use a smaller model. Update `docker-compose.yml` if you want to [enable GPU support](https://docs.ollama.com/docker)._
-
-```bash
-docker-compose --env-file model.env up --build -d
-```
-
-On first run, the backend may fail until Ollama finishes pulling the model. Check logs with `docker-compose logs -f ollama` and wait for the "llama runner started" message. Ollama will persist the model locally in `.docker-compose/ollama/data`, so subsequent runs should be faster.
