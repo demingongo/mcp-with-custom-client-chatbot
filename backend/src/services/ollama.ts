@@ -1,6 +1,8 @@
 import pino from "pino";
 
-const log = pino({ level: process.env.LOG_LEVEL ?? "debug" }).child({ tag: "ollama" });
+const log = pino({ level: process.env.LOG_LEVEL ?? "debug" }).child({
+  tag: "ollama",
+});
 
 export interface ChatMessage {
   role: "system" | "user" | "assistant" | "tool";
@@ -34,11 +36,9 @@ export async function ollamaChat(
       url: `${OLLAMA_BASE_URL}/api/chat`,
       model,
       messages: messages.length,
-      lastUserPreview: messages
-        .findLast((m: ChatMessage) => m.role === "user")
-        ?.content?.slice(0, 120),
+      lastUserPreview: messages.findLast((m: ChatMessage) => m.role === "user")?.content?.slice(0, 120),
     },
-    "→ POST /api/chat",
+    "→ POST /api/chat"
   );
   log.debug({ body }, "request body");
 
@@ -52,8 +52,11 @@ export async function ollamaChat(
     });
   } catch (err) {
     log.error(
-      { error: err instanceof Error ? err.message : String(err), ms: Date.now() - t0 },
-      "fetch failed",
+      {
+        error: err instanceof Error ? err.message : String(err),
+        ms: Date.now() - t0,
+      },
+      "fetch failed"
     );
     throw err;
   }

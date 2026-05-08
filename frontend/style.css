@@ -139,8 +139,12 @@ body {
   white-space: normal;
 }
 
-.msg.assistant .body > *:first-child { margin-top: 0; }
-.msg.assistant .body > *:last-child { margin-bottom: 0; }
+.msg.assistant .body > *:first-child {
+  margin-top: 0;
+}
+.msg.assistant .body > *:last-child {
+  margin-bottom: 0;
+}
 
 .msg.assistant .body p {
   margin: 0.5em 0;
@@ -154,10 +158,19 @@ body {
   font-weight: 600;
   line-height: 1.25;
 }
-.msg.assistant .body h1 { font-size: 1.25rem; }
-.msg.assistant .body h2 { font-size: 1.15rem; }
-.msg.assistant .body h3 { font-size: 1.05rem; }
-.msg.assistant .body h4 { font-size: 1rem; color: var(--muted); }
+.msg.assistant .body h1 {
+  font-size: 1.25rem;
+}
+.msg.assistant .body h2 {
+  font-size: 1.15rem;
+}
+.msg.assistant .body h3 {
+  font-size: 1.05rem;
+}
+.msg.assistant .body h4 {
+  font-size: 1rem;
+  color: var(--muted);
+}
 
 .msg.assistant .body ul,
 .msg.assistant .body ol {
@@ -173,8 +186,14 @@ body {
   margin: 0.15em 0;
 }
 
-.msg.assistant .body strong { font-weight: 600; color: #f0f6fc; }
-.msg.assistant .body em { font-style: italic; color: #d0d7de; }
+.msg.assistant .body strong {
+  font-weight: 600;
+  color: #f0f6fc;
+}
+.msg.assistant .body em {
+  font-style: italic;
+  color: #d0d7de;
+}
 
 .msg.assistant .body code {
   background: rgba(110, 118, 129, 0.25);
@@ -253,7 +272,9 @@ body {
 }
 
 @keyframes blink {
-  50% { opacity: 0; }
+  50% {
+    opacity: 0;
+  }
 }
 
 .composer {

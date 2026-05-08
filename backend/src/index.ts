@@ -1,7 +1,7 @@
-import express, { NextFunction, Request, Response } from "express";
-import cors from "cors";
-import pino from "pino";
 import chatRouter from "./routes/chat";
+import cors from "cors";
+import express, { NextFunction, Request, Response } from "express";
+import pino from "pino";
 
 const baseLog = pino({ level: process.env.LOG_LEVEL ?? "debug" });
 const httpLog = baseLog.child({ tag: "http" });
@@ -15,10 +15,7 @@ app.use(express.json({ limit: "1mb" }));
 
 app.use((req: Request, res: Response, next: NextFunction) => {
   const t0 = Date.now();
-  httpLog.debug(
-    { ip: req.ip, ua: req.headers["user-agent"]?.slice(0, 80) },
-    `→ ${req.method} ${req.originalUrl}`,
-  );
+  httpLog.debug({ ip: req.ip, ua: req.headers["user-agent"]?.slice(0, 80) }, `→ ${req.method} ${req.originalUrl}`);
   res.on("finish", () => {
     const ms = Date.now() - t0;
     const level = res.statusCode >= 500 ? "error" : res.statusCode >= 400 ? "warn" : "info";
@@ -54,6 +51,6 @@ app.listen(PORT, () => {
       mcpUrl,
       logLevel: process.env.LOG_LEVEL ?? "debug",
     },
-    "ConnectAuz backend started",
+    "ConnectAuz backend started"
   );
 });

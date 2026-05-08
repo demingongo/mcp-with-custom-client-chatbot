@@ -1,0 +1,52 @@
+{
+  "name": "mcp-with-custom-client-chatbot",
+  "version": "0.1.0",
+  "private": true,
+  "description": "ConnectAuz product assistant — a local chat app that answers questions about [ConnectAuz](https://www.connectauz.com.au) products by combining a local LLM (Ollama) with an MCP knowledge server.",
+  "scripts": {
+    "build": "pnpm -r build",
+    "dev": "pnpm -r dev",
+    "format": "cross-env NODE_OPTIONS=--experimental-strip-types prettier --write ./",
+    "format:staged": "cross-env NODE_OPTIONS=--experimental-strip-types lint-staged",
+    "lint": "pnpm -r lint",
+    "test": "pnpm -r test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/demingongo/mcp-with-custom-client-chatbot.git"
+  },
+  "keywords": [
+    "mcp",
+    "chat",
+    "server"
+  ],
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/demingongo/mcp-with-custom-client-chatbot/issues"
+  },
+  "homepage": "https://github.com/demingongo/mcp-with-custom-client-chatbot#readme",
+  "packageManager": "pnpm@10.30.3",
+  "devDependencies": {
+    "@eslint/eslintrc": "^3.3.5",
+    "@eslint/js": "^10.0.1",
+    "@stylistic/eslint-plugin": "^5.10.0",
+    "@trivago/prettier-plugin-sort-imports": "^6.0.2",
+    "@types/node": "^25.6.2",
+    "@typescript-eslint/eslint-plugin": "^8.59.2",
+    "@typescript-eslint/parser": "^8.59.2",
+    "cross-env": "^10.1.0",
+    "eslint": "^10.3.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-import-resolver-typescript": "^4.4.4",
+    "eslint-plugin-import": "^2.32.0",
+    "globals": "^17.6.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^17.0.2",
+    "prettier": "^3.8.3",
+    "ts-node": "^10.9.2",
+    "tsup": "^8.5.1",
+    "tsx": "^4.21.0",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.59.2"
+  }
+}

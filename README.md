@@ -75,24 +75,26 @@ cd mcp-server && npm run build && npm start
 
 Backend env vars:
 
-| Variable | Default | Description |
-| --- | --- | --- |
-| `PORT` | `3000` | Backend HTTP port |
-| `OLLAMA_BASE_URL` | `http://localhost:11434` | Ollama endpoint |
-| `OLLAMA_MODEL` | `gemma4:latest` | Model name |
-| `MCP_BASE_URL` | `http://localhost:3001` | MCP server endpoint |
-| `LOG_LEVEL` | `debug` | Pino log level |
+| Variable          | Default                  | Description         |
+| ----------------- | ------------------------ | ------------------- |
+| `PORT`            | `3000`                   | Backend HTTP port   |
+| `OLLAMA_BASE_URL` | `http://localhost:11434` | Ollama endpoint     |
+| `OLLAMA_MODEL`    | `gemma4:latest`          | Model name          |
+| `MCP_BASE_URL`    | `http://localhost:3001`  | MCP server endpoint |
+| `LOG_LEVEL`       | `debug`                  | Pino log level      |
 
 MCP server env vars: `PORT` (default `3001`), `LOG_LEVEL`.
 
 ## API
 
 Backend:
+
 - `GET  /health` — liveness
 - `GET  /api/chat/config` — resolved Ollama + MCP config
 - `POST /api/chat` — body `{ messages: [{role, content}, ...] }`
 
 MCP server:
+
 - `GET  /info` — server metadata + endpoint map
 - `GET  /mcp/tools` — tool definitions
 - `POST /mcp/invoke` — body `{ tool, arguments }`

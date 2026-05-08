@@ -1,6 +1,8 @@
 import pino from "pino";
 
-const log = pino({ level: process.env.LOG_LEVEL ?? "debug" }).child({ tag: "mcp-client" });
+const log = pino({ level: process.env.LOG_LEVEL ?? "debug" }).child({
+  tag: "mcp-client",
+});
 
 const MCP_BASE_URL = process.env.MCP_BASE_URL ?? "http://localhost:3001";
 
@@ -11,10 +13,7 @@ export interface McpInvokeResult {
   error?: string;
 }
 
-export async function invokeTool(
-  tool: string,
-  args: Record<string, unknown> = {}
-): Promise<McpInvokeResult> {
+export async function invokeTool(tool: string, args: Record<string, unknown> = {}): Promise<McpInvokeResult> {
   const url = `${MCP_BASE_URL}/mcp/invoke`;
   log.info({ url, arguments: args }, `→ invoke '${tool}'`);
   const t0 = Date.now();
@@ -28,8 +27,12 @@ export async function invokeTool(
     });
   } catch (err) {
     log.error(
-      { tool, error: err instanceof Error ? err.message : String(err), ms: Date.now() - t0 },
-      "fetch failed",
+      {
+        tool,
+        error: err instanceof Error ? err.message : String(err),
+        ms: Date.now() - t0,
+      },
+      "fetch failed"
     );
     throw err;
   }
@@ -43,8 +46,8 @@ export async function invokeTool(
     const dataLen = Array.isArray(result.data)
       ? result.data.length
       : result.data && typeof result.data === "object"
-      ? Object.keys(result.data as object).length
-      : undefined;
+        ? Object.keys(result.data as object).length
+        : undefined;
     log.info({ ms, dataItems: dataLen }, `← '${tool}' ok`);
   }
   log.debug({ result }, "full result");

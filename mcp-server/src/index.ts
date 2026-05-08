@@ -1,9 +1,9 @@
-import express, { NextFunction, Request, Response } from "express";
-import cors from "cors";
-import pino from "pino";
-import productsRouter from "./routes/products";
 import mcpRouter from "./routes/mcp";
+import productsRouter from "./routes/products";
 import { loadCatalog } from "./services/productService";
+import cors from "cors";
+import express, { NextFunction, Request, Response } from "express";
+import pino from "pino";
 
 const baseLog = pino({ level: process.env.LOG_LEVEL ?? "debug" });
 const httpLog = baseLog.child({ tag: "http" });
@@ -17,10 +17,7 @@ app.use(express.json({ limit: "1mb" }));
 
 app.use((req: Request, res: Response, next: NextFunction) => {
   const t0 = Date.now();
-  httpLog.debug(
-    { ip: req.ip, ua: req.headers["user-agent"]?.slice(0, 80) },
-    `→ ${req.method} ${req.originalUrl}`,
-  );
+  httpLog.debug({ ip: req.ip, ua: req.headers["user-agent"]?.slice(0, 80) }, `→ ${req.method} ${req.originalUrl}`);
   res.on("finish", () => {
     const ms = Date.now() - t0;
     const level = res.statusCode >= 500 ? "error" : res.statusCode >= 400 ? "warn" : "info";
@@ -65,8 +62,5 @@ app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
 });
 
 app.listen(PORT, () => {
-  serverLog.info(
-    { port: PORT, logLevel: process.env.LOG_LEVEL ?? "debug" },
-    "ConnectAuz MCP server started",
-  );
+  serverLog.info({ port: PORT, logLevel: process.env.LOG_LEVEL ?? "debug" }, "ConnectAuz MCP server started");
 });

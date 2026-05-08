@@ -120,9 +120,7 @@ form.addEventListener("submit", async (e) => {
       return;
     }
 
-    const tools = (data.trace || [])
-      .filter((t) => t.step.startsWith("tool_"))
-      .map((t) => t.step.replace("tool_", ""));
+    const tools = (data.trace || []).filter((t) => t.step.startsWith("tool_")).map((t) => t.step.replace("tool_", ""));
 
     appendMessage("assistant", data.reply, { tools });
     history.push({ role: "assistant", content: data.reply });
@@ -139,5 +137,5 @@ form.addEventListener("submit", async (e) => {
 loadConfig();
 appendMessage(
   "assistant",
-  "Hi — ask me anything about ConnectAuz products. Try: \"What does CA Fleet do?\" or \"Compare CA POS and CA Workforce.\""
+  'Hi — ask me anything about ConnectAuz products. Try: "What does CA Fleet do?" or "Compare CA POS and CA Workforce."'
 );

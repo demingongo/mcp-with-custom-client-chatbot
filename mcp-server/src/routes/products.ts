@@ -1,4 +1,3 @@
-import { Router, Request, Response } from "express";
 import {
   filterByCategory,
   getProductById,
@@ -7,6 +6,7 @@ import {
   loadCatalog,
   searchProducts,
 } from "../services/productService";
+import { Router, Request, Response } from "express";
 
 const router = Router();
 
@@ -50,9 +50,7 @@ router.get("/category/:category", (req: Request, res: Response) => {
 router.get("/:id", (req: Request, res: Response) => {
   const product = getProductById(req.params.id);
   if (!product) {
-    return res
-      .status(404)
-      .json({ ok: false, error: `Product '${req.params.id}' not found` });
+    return res.status(404).json({ ok: false, error: `Product '${req.params.id}' not found` });
   }
   res.json({ ok: true, product });
 });

@@ -1,0 +1,221 @@
+{
+  "source": "https://www.connectauz.com.au/products/",
+  "lastUpdated": "2026-05-05",
+  "products": [
+    {
+      "id": "ca-fleet",
+      "name": "CA Fleet",
+      "url": "https://www.connectauz.com.au/products/ca-fleet/",
+      "shortDescription": "Cloud-based fleet management solution that consolidates job management, compliance, and operational control into one connected, data-driven platform with real-time visibility across vehicles and drivers.",
+      "overview": "CA Fleet is a comprehensive digital platform designed to modernize transport and fleet management operations. It consolidates job management, compliance tracking, and operational control into a single integrated system, enabling organizations to transition from manual, paper-based processes to connected, data-driven fleet operations while maintaining real-time visibility across all vehicles and drivers.",
+      "category": "Fleet Management Software",
+      "targetCustomers": [
+        "Mid-to-large organizations operating vehicle fleets",
+        "Transport and logistics operators",
+        "Construction firms with vehicle and equipment fleets",
+        "Property management companies running service vehicles",
+        "Agriculture businesses with farm vehicles",
+        "Banking field-officer fleets",
+        "Cleaning services and plumbing service fleets",
+        "Manufacturing operations with fleet assets",
+        "Teams sized 1-25 up to 750+ users"
+      ],
+      "businessProblem": "Manual, paper-based fleet operations cause regulatory non-compliance (Chain of Responsibility, WHS), poor accountability for driver actions and incidents, unexpected breakdowns and maintenance costs, untracked fuel and expense waste, and limited real-time visibility into fleet performance.",
+      "keyFeatures": [
+        "Alerts & Compliance Management — driver licence, registration and document expiry alerts; automated warnings to prevent fines and legal risk",
+        "Driver Allocation & Responsibility Tracking — driver-vehicle assignments with timestamps, historical allocation records, and audit trails",
+        "Fleet Condition Reporting — real-time mobile vehicle inspections with photos, notes, and instant submission from the field",
+        "Expense Management — fleet-wide expense tracking with categorization (fuel, repairs, tolls) and real-time spend visibility",
+        "Repair & Maintenance Tracking — service scheduling, history, and automated maintenance reminders",
+        "Fuel Tracking & Optimization — usage and consumption trends, per-vehicle fuel cost analysis, anomaly detection",
+        "Document Management — centralized, secure document storage accessible from web and mobile",
+        "Custom eForms — configurable safety checklists, incident reports, and inspection forms with mobile submission",
+        "Dashboard & Real-Time Visibility — centralized dashboard with live performance insights and role-based access"
+      ],
+      "advancedFeatures": [
+        "Predictive maintenance strategy support",
+        "Anomaly detection on fuel consumption patterns",
+        "Historical tracking and audit-ready reporting",
+        "Role-based access control across teams"
+      ],
+      "businessBenefits": [
+        "Ensures regulatory compliance and avoids penalties",
+        "Establishes clear accountability for incidents and violations",
+        "Reduces unexpected breakdowns through proactive maintenance",
+        "Extends fleet lifespan and improves safety compliance",
+        "Identifies cost leakages and supports budget optimization",
+        "Eliminates manual paperwork and administrative errors",
+        "Enables data-driven coordination and decision-making"
+      ],
+      "useCases": [
+        "Transport companies verifying driver compliance before dispatch",
+        "Banking fleet teams managing field-officer safety and legality",
+        "Cleaning companies tracking vehicle damage accountability",
+        "Construction firms monitoring equipment-operator responsibility",
+        "Property managers ensuring service-vehicle availability",
+        "Agriculture businesses monitoring farm-vehicle conditions",
+        "Factories identifying high-expense vehicles",
+        "Plumbing services tracking job-specific vehicle costs",
+        "Logistics operators optimizing fuel usage across routes"
+      ],
+      "complianceStandards": [
+        "Chain of Responsibility (CoR)",
+        "Work Health & Safety (WHS)",
+        "Audit-trail and compliance reporting requirements"
+      ],
+      "platformsSupported": ["Web", "iOS", "Android"],
+      "deploymentType": ["Cloud", "Web", "Mobile"]
+    },
+    {
+      "id": "ca-workforce",
+      "name": "CA Workforce",
+      "url": "https://www.connectauz.com.au/products/ca-workforce/",
+      "shortDescription": "Enterprise workforce management platform centralizing HR operations, attendance, scheduling, and task management — giving organizations clarity, structure, and real-time control over their teams.",
+      "overview": "CA Workforce is an enterprise workforce management system designed to provide clarity, structure, and real-time control for managing employees. The platform centralizes HR operations, attendance tracking, scheduling, and task management into a unified digital system, helping organizations move from manual processes to automated, data-driven workflows.",
+      "category": "Workforce Management",
+      "targetCustomers": [
+        "Manufacturing companies managing hundreds of workers",
+        "Service companies with multi-location operations",
+        "Construction firms",
+        "Hospitals and healthcare facilities",
+        "Facility and property management companies",
+        "Electrical and cleaning service providers",
+        "Hospitality operators",
+        "Corporate offices",
+        "Businesses with 1-750+ employees"
+      ],
+      "businessProblem": "Manual HR administration, attendance errors, payroll inaccuracies, scheduling conflicts, and limited visibility across distributed teams make it hard to coordinate workforce operations and make data-driven decisions.",
+      "keyFeatures": [
+        "Employee Management — centralized employee database with roles, departments, profiles, and document storage",
+        "Attendance & Timesheet Management — real-time check-in/check-out tracking, digital timesheets, and attendance analytics",
+        "Shift Scheduling & Workforce Planning — smart scheduling, automated assignments, and conflict reduction",
+        "Task & Activity Tracking — task assignment with real-time progress monitoring across teams",
+        "HR & Communication Management — notice board, announcements, internal communication, leave management",
+        "Workforce Analytics & Reporting — dashboards for performance, attendance, and productivity insights"
+      ],
+      "advancedFeatures": [
+        "Real-time activity tracking across field teams",
+        "Automated shift conflict detection and resolution",
+        "Data-driven workforce performance dashboards"
+      ],
+      "businessBenefits": [
+        "Improved workforce visibility and operational transparency",
+        "Reduced manual HR administration overhead",
+        "Improved payroll accuracy",
+        "Increased employee accountability",
+        "Optimized manpower utilization and team productivity",
+        "Reduced scheduling conflicts and faster HR coordination",
+        "Better employee engagement and strategic planning"
+      ],
+      "useCases": [
+        "Manufacturing: managing hundreds of workers from one system",
+        "Multi-location services: maintaining employee records across facilities",
+        "Construction: daily on-site worker attendance tracking",
+        "Healthcare: rotating-staff shift scheduling",
+        "Facility management: monitoring remote staff hours",
+        "Property management: tracking maintenance tasks",
+        "Field services: monitoring job progress in real time",
+        "Corporate: company-wide announcements and updates"
+      ],
+      "platformsSupported": ["Web", "iOS", "Android"],
+      "deploymentType": ["Cloud", "Web", "Mobile"]
+    },
+    {
+      "id": "ca-pos",
+      "name": "CA POS",
+      "url": "https://www.connectauz.com.au/products/ca-pos/",
+      "shortDescription": "Customizable cloud point-of-sale platform unifying sales, payments, inventory, and reporting for retail, hospitality, and multi-outlet operations — Sell Faster. Serve Better.",
+      "overview": "CA POS is a customizable point-of-sale system built for businesses that need flexibility beyond standard off-the-shelf retail tools. It unifies sales, payments, inventory, refunds, and reporting in a single cloud platform — designed for fast checkout, accurate stock control, and centralized oversight of multi-outlet and franchise operations.",
+      "category": "Retail & Point of Sale",
+      "targetCustomers": [
+        "Multi-outlet and franchise businesses",
+        "Retail stores",
+        "Restaurants, cafes, and hospitality operators",
+        "Pharmacies",
+        "Electronics shops",
+        "Supermarkets",
+        "Small to large enterprises (1-750+ employees)"
+      ],
+      "businessProblem": "Slow manual checkout, billing errors, fragmented payment tracking, inventory mismanagement, and lack of unified visibility across outlets prevent operators from running efficient, data-driven retail operations.",
+      "keyFeatures": [
+        "Sales Management — fast sales processing, real-time transaction recording, invoice/receipt generation, multi-item billing",
+        "Payments Management — cash, card, and digital payments with partial/split payment support and reconciliation",
+        "Item & Inventory Management — centralized catalog, category and pricing control, real-time stock levels, automatic post-sale updates",
+        "Refund & Return Management — streamlined refund workflows, approval flows, and return documentation",
+        "Reporting & Business Analytics — daily/weekly/monthly sales dashboards, product performance and revenue tracking",
+        "Multi-Outlet & Operational Control — multi-branch management from a unified dashboard with role-based access and cloud sync"
+      ],
+      "advancedFeatures": [
+        "Centralized monitoring across all branches",
+        "Operational consistency enforcement across outlets",
+        "Cloud-based synchronization between locations"
+      ],
+      "businessBenefits": [
+        "Accelerated checkout and improved customer experience",
+        "Reduced billing and inventory errors",
+        "Greater payment transparency and reconciliation accuracy",
+        "Data-driven decisions on top-selling products and revenue",
+        "Simplified management of multi-location and franchise operations"
+      ],
+      "useCases": [
+        "Retail stores processing peak-hour transactions",
+        "Restaurants managing high-volume orders",
+        "Franchise chains controlling multiple outlets remotely",
+        "Electronics retailers managing warranty refunds",
+        "Pharmacies managing categorized inventory"
+      ],
+      "platformsSupported": ["Web", "Tablet", "iOS", "Android"],
+      "deploymentType": ["Cloud", "Web", "Mobile"]
+    },
+    {
+      "id": "ca-projects",
+      "name": "CA Project",
+      "url": "https://www.connectauz.com.au/products/ca-projects/",
+      "shortDescription": "Centralized project management platform that helps teams plan, organize, track, and deliver projects from one workspace — Plan Better. Deliver Faster.",
+      "overview": "CA Project is a project management platform that helps teams plan, organize, track, and successfully deliver projects from one centralized workspace. It supports project structuring, task allocation, team collaboration, resource planning, document management, and real-time progress reporting.",
+      "category": "Project Management",
+      "targetCustomers": [
+        "IT and software development companies",
+        "Construction firms",
+        "Marketing agencies",
+        "Consulting firms",
+        "Engineering teams",
+        "Architecture firms",
+        "Remote and distributed teams",
+        "Corporate departments managing simultaneous projects"
+      ],
+      "businessProblem": "Scattered tools, inconsistent communication, missed deadlines, resource overallocation, and limited real-time insight into project performance prevent teams from delivering predictably.",
+      "keyFeatures": [
+        "Project Planning & Management — project creation, milestones, deadlines, and timeline visualization on a centralized dashboard",
+        "Task Management & Assignment — task creation, priorities, status tracking, deadlines and reminders",
+        "Team Collaboration & Communication — shared workspace with comments, activity updates, and real-time communication",
+        "Resource & Workforce Allocation — resource assignment, workload distribution, capacity management, role-based responsibility",
+        "Progress Tracking & Reporting — real-time progress, performance dashboards, status reports, and custom analytics",
+        "Document & Workflow Management — project document storage, file sharing, version control, and workflow approvals"
+      ],
+      "advancedFeatures": [
+        "Real-time multi-team progress tracking",
+        "Custom analytics and reporting",
+        "Workflow approval routing",
+        "Early project-risk identification"
+      ],
+      "businessBenefits": [
+        "Improved project organization and visibility",
+        "Reduced planning complexity",
+        "Stronger team accountability and productivity",
+        "Optimized resource utilization, preventing employee overload",
+        "Data-driven decision-making and earlier risk detection"
+      ],
+      "useCases": [
+        "IT companies running multiple software delivery projects in parallel",
+        "Construction firms coordinating sub-contractors and milestones",
+        "Marketing agencies managing client campaigns end-to-end",
+        "Consulting firms tracking engagements across teams",
+        "Engineering and architecture teams managing design workflows",
+        "Remote teams coordinating cross-timezone deliverables"
+      ],
+      "platformsSupported": ["Web", "iOS", "Android"],
+      "deploymentType": ["Cloud", "Web", "Mobile"]
+    }
+  ]
+}

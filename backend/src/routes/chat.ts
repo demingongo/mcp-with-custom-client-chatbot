@@ -1,7 +1,7 @@
+import { invokeTool, mcpConfig } from "../services/mcpClient";
+import { ChatMessage, ollamaChat, ollamaConfig } from "../services/ollama";
 import { Router, Request, Response } from "express";
 import pino from "pino";
-import { ChatMessage, ollamaChat, ollamaConfig } from "../services/ollama";
-import { invokeTool, mcpConfig } from "../services/mcpClient";
 
 const baseLog = pino({ level: process.env.LOG_LEVEL ?? "debug" });
 
@@ -28,9 +28,7 @@ If the user asks something unrelated to ConnectAuz products, answer normally wit
 
 const TOOL_CALL_REGEX = /\{[\s\S]*"tool"\s*:\s*"[^"]+"[\s\S]*\}/;
 
-function tryParseToolCall(
-  text: string
-): { tool: string; arguments?: Record<string, unknown> } | null {
+function tryParseToolCall(text: string): { tool: string; arguments?: Record<string, unknown> } | null {
   const trimmed = text.trim();
   const match = trimmed.match(TOOL_CALL_REGEX);
   if (!match) return null;
@@ -66,14 +64,14 @@ router.post("/", async (req: Request, res: Response) => {
 
   const lastUser = userMessages.findLast((m: ChatMessage) => m.role === "user");
   log.info(
-    { historyLength: userMessages.length, userMessage: lastUser?.content?.slice(0, 200) },
-    "incoming chat request",
+    {
+      historyLength: userMessages.length,
+      userMessage: lastUser?.content?.slice(0, 200),
+    },
+    "incoming chat request"
   );
 
-  const conversation: ChatMessage[] = [
-    { role: "system", content: SYSTEM_PROMPT },
-    ...userMessages,
-  ];
+  const conversation: ChatMessage[] = [{ role: "system", content: SYSTEM_PROMPT }, ...userMessages];
 
   const trace: Array<{ step: string; detail: unknown }> = [];
   const MAX_STEPS = 5;

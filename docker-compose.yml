@@ -52,7 +52,7 @@ services:
       start_period: 10s
     volumes:
       - ./.docker-compose/ollama/data:/root/.ollama
-    # ollama doesn't have a built-in way to run a model on startup, 
+    # ollama doesn't have a built-in way to run a model on startup,
     # so we use the entrypoint to start the server and then run the model
     entrypoint: /bin/sh
     command: -c "ollama serve & sleep 5 && ollama run ${OLLAMA_MODEL:-gemma4:latest} && wait"

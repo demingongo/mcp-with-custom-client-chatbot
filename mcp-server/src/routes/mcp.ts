@@ -1,5 +1,3 @@
-import { Router, Request, Response } from "express";
-import pino from "pino";
 import {
   filterByCategory,
   getProductById,
@@ -8,8 +6,12 @@ import {
   searchProducts,
 } from "../services/productService";
 import { McpRequest, McpResponse, McpToolDefinition } from "../types";
+import { Router, Request, Response } from "express";
+import pino from "pino";
 
-const log = pino({ level: process.env.LOG_LEVEL ?? "debug" }).child({ tag: "mcp" });
+const log = pino({ level: process.env.LOG_LEVEL ?? "debug" }).child({
+  tag: "mcp",
+});
 
 const router = Router();
 
@@ -25,7 +27,10 @@ const TOOLS: McpToolDefinition[] = [
     inputSchema: {
       type: "object",
       properties: {
-        id: { type: "string", description: "Product id (e.g. 'ca-fleet') or product name." },
+        id: {
+          type: "string",
+          description: "Product id (e.g. 'ca-fleet') or product name.",
+        },
       },
       required: ["id"],
     },
@@ -52,7 +57,10 @@ const TOOLS: McpToolDefinition[] = [
     inputSchema: {
       type: "object",
       properties: {
-        category: { type: "string", description: "Category keyword, e.g. 'Fleet'." },
+        category: {
+          type: "string",
+          description: "Category keyword, e.g. 'Fleet'.",
+        },
       },
       required: ["category"],
     },

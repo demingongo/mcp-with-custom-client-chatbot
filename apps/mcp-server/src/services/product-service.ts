@@ -1,13 +1,9 @@
 import { Product, ProductCatalog } from "../types";
+import { log } from "./log-service";
 import fs from "fs";
 import path from "path";
-import pino from "pino";
 
-const log = pino({ level: process.env.LOG_LEVEL ?? "debug" }).child({
-  tag: "catalog",
-});
-
-const DATA_PATH = path.join(__dirname, "..", "data", "products.json");
+const DATA_PATH = path.join(process.cwd(), "data", "products.json");
 
 let cache: ProductCatalog | null = null;
 
