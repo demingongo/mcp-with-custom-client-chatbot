@@ -120,7 +120,7 @@ curl -si -X POST http://localhost:3001/mcp \
     "id": 1,
     "method": "initialize",
     "params": {
-      "protocolVersion": "2024-11-05",
+      "protocolVersion": "2025-03-26",
       "clientInfo": { "name": "curl-client", "version": "0.0.1" },
       "capabilities": {}
     }

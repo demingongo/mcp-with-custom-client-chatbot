@@ -101,7 +101,7 @@ function handleInitialize(id: JsonRpcId): { response: JsonRpcResponse; newSessio
     sessions.set(sessionId, { id: sessionId, initialized: false, createdAt: new Date() });
 
     const result = {
-        protocolVersion: '2024-11-05',
+        protocolVersion: '2025-03-26',
         serverInfo: { name: 'raw-streamable-http-mcp-server', version: '1.0.0' },
         capabilities: {
             tools: { listChanged: false },
