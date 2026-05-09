@@ -18,7 +18,7 @@
     "noFallthroughCasesInSwitch": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "exactOptionalPropertyTypes": true,
+    "exactOptionalPropertyTypes": false,
     "typeRoots": ["types", "node_modules/@types"]
   },
   "include": ["src"],

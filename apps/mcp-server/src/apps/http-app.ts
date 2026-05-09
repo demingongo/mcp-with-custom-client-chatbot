@@ -33,6 +33,7 @@ export const app = new Kaapi({
                 if (document.documentElement.classList.contains("dark-mode")) { document.documentElement.classList.remove("dark-mode"); }
                 }, 10);
                 `,
+        customSiteTitle: `${APP_NAME}`
       },
     },
 

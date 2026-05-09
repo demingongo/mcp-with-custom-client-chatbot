@@ -109,6 +109,7 @@ export const toolsV2Route: KaapiServerRoute = {
 
               //let outputSchema: McpToolDefinition["outputSchema"] = undefined;
 
+              // 1. Process parameters (query, path, header)
               if (op.parameters?.length) {
                 inputSchema.properties = inputSchema.properties ?? {};
                 for (const param of op.parameters) {
@@ -120,14 +121,44 @@ export const toolsV2Route: KaapiServerRoute = {
                     log.warn({ param }, "Invalid parameter definition, missing 'name' or 'in'");
                     continue;
                   }
+
+                  // const key = `${param.in}_${param.name}`; // prefix with 'query_' or 'path_' to avoid name collisions
                   const key = `${param.name}`;
-                  inputSchema.properties[key] = {
-                    type: "string", // For simplicity, we treat all parameters as strings in this example.
-                    description: param.description,
-                  };
+                  if (param.schema && "type" in param.schema && param.schema.type) {
+                    inputSchema.properties[key] = param.schema
+                  } else {
+                    inputSchema.properties[key] = {
+                      type: "string", // For simplicity, we treat all parameters as strings in this example.
+                      description: param.description,
+                    };
+                  }
+
                   if (param.required) {
                     inputSchema.required = inputSchema.required ?? [];
                     inputSchema.required.push(key);
+                  }
+                }
+              }
+
+              // 2. Process Request Body (Flattening objects into the root)
+              if ("requestBody" in op && op.requestBody && typeof op.requestBody === "object" &&
+                "content" in op.requestBody && op.requestBody.content && typeof op.requestBody.content === "object"
+              ) {
+                const bodySchema = op.requestBody?.content?.["application/json"]?.schema;
+                if (bodySchema && typeof bodySchema === "object" && "type" in bodySchema && bodySchema.type) {
+                  if (bodySchema.type === "object" && bodySchema.properties) {
+                    Object.entries(bodySchema.properties).forEach(([name, schema]) => {
+                      inputSchema.properties[name] = schema;
+                    });
+                    if (bodySchema.required) {
+                      inputSchema.required = inputSchema.required ?? [];
+                      inputSchema.required.push(...bodySchema.required);
+                    }
+                  } else {
+                    // If the body is a primitive or array, wrap it in a "body" property
+                    inputSchema.properties["body"] = bodySchema;
+                    inputSchema.required = inputSchema.required ?? [];
+                    inputSchema.required.push("body");
                   }
                 }
               }

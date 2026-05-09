@@ -1,3 +1,5 @@
+import type { OpenAPIV3_1 } from "openapi-types";
+
 export interface Product {
   id: string;
   name: string;
@@ -29,7 +31,7 @@ export interface McpToolDefinition {
   description: string;
   inputSchema: {
     type: "object";
-    properties: Record<string, { type: string; description?: string | undefined }>;
+    properties: Record<string, OpenAPIV3_1.SchemaObject>;
     required?: string[];
   };
   title?: string;
