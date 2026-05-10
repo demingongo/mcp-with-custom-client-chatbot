@@ -1,6 +1,7 @@
 import { handleMcpRequest, sessions } from "./handler";
 import type { JsonRpcRequest } from "./types";
 import express, { type NextFunction, type Request, type Response } from "express";
+import { randomUUID } from "node:crypto";
 import { Writable } from "node:stream";
 import pino from "pino";
 
@@ -172,6 +173,11 @@ app.get("/mcp", (req: Request, res: Response) => {
     Connection: "keep-alive",
   });
   res.flushHeaders();
+
+  // Spec §Resumability: immediately send a prime event with an event ID so the client
+  // can supply Last-Event-ID on reconnect. ID encodes both session and stream identity.
+  const streamId = randomUUID();
+  res.write(`id: ${sessionId}/${streamId}\ndata: \n\n`);
 
   const pingInterval = setInterval(() => {
     res.write(

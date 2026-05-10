@@ -120,6 +120,9 @@ function handleInitialize(id: JsonRpcId, params: unknown): { response: JsonRpcRe
     capabilities: {
       tools: { listChanged: false },
     },
+    instructions:
+      "A library catalogue MCP server. Call tools/list to discover available tools, then tools/call to invoke them. " +
+      "Available tools: list_books (filter by genre or availability), get_book (fetch by ID), search_books (search by keyword).",
   };
 
   return { response: success(id, result), newSessionId: sessionId };
