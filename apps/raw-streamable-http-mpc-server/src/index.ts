@@ -73,6 +73,20 @@ app.get("/health", (_req: Request, res: Response) => {
 });
 
 // ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+// Spec §Error Responses: id MUST NOT be null. When the request body is parseable,
+// echo its id; when it is not, omit the field entirely (undefined, not null).
+function extractId(body: unknown): string | number | undefined {
+  if (body !== null && typeof body === "object" && !Array.isArray(body)) {
+    const id = (body as Record<string, unknown>)["id"];
+    if (typeof id === "string" || typeof id === "number") return id;
+  }
+  return undefined;
+}
+
+// ---------------------------------------------------------------------------
 // POST /mcp — client sends JSON-RPC messages
 // ---------------------------------------------------------------------------
 
@@ -84,7 +98,7 @@ app.post("/mcp", (req: Request, res: Response) => {
   if (!accept.includes("application/json") || !accept.includes("text/event-stream")) {
     res.status(406).json({
       jsonrpc: "2.0",
-      id: null,
+      id: extractId(req.body),
       error: {
         code: -32600,
         message: "Not Acceptable: Accept header must include application/json and text/event-stream",
@@ -95,9 +109,9 @@ app.post("/mcp", (req: Request, res: Response) => {
 
   // Spec §2025-06-18: batching (array bodies) is no longer supported.
   if (Array.isArray(req.body)) {
+    // Body is an array — no id field to extract.
     res.status(400).json({
       jsonrpc: "2.0",
-      id: null,
       error: { code: -32600, message: "JSON-RPC batching is not supported" },
     });
     return;
@@ -108,7 +122,7 @@ app.post("/mcp", (req: Request, res: Response) => {
   if (!rpc || rpc.jsonrpc !== "2.0" || typeof rpc.method !== "string") {
     res.status(400).json({
       jsonrpc: "2.0",
-      id: null,
+      id: extractId(req.body),
       error: { code: -32700, message: "Parse error: invalid JSON-RPC 2.0 request" },
     });
     return;
@@ -125,7 +139,7 @@ app.post("/mcp", (req: Request, res: Response) => {
     if (typeof clientVersion === "undefined" || !SUPPORTED_PROTOCOL_VERSIONS.has(clientVersion as string)) {
       res.status(400).json({
         jsonrpc: "2.0",
-        id: null,
+        id: extractId(rpc),
         error: { code: -32600, message: `Unsupported MCP-Protocol-Version: "${clientVersion}"` },
       });
       return;
@@ -133,13 +147,23 @@ app.post("/mcp", (req: Request, res: Response) => {
   }
 
   // All methods other than initialize require a valid existing session.
-  // Spec §Session Management: respond with HTTP 404 for unknown/expired session IDs.
+  // Spec §Session Management:
+  //   - No header at all → 400 Bad Request (point 2)
+  //   - Header present but session expired/unknown → 404 Not Found (point 3)
   if (rpc.method !== "initialize") {
-    if (!sessionId || !sessions.has(sessionId)) {
+    if (!sessionId) {
+      res.status(400).json({
+        jsonrpc: "2.0",
+        id: extractId(rpc),
+        error: { code: -32600, message: "Missing Mcp-Session-Id header" },
+      });
+      return;
+    }
+    if (!sessions.has(sessionId)) {
       res.status(404).json({
         jsonrpc: "2.0",
-        id: null,
-        error: { code: -32600, message: "Invalid or missing Mcp-Session-Id header" },
+        id: extractId(rpc),
+        error: { code: -32600, message: "Session not found or expired" },
       });
       return;
     }
@@ -175,9 +199,9 @@ app.get("/mcp", (req: Request, res: Response) => {
   // Spec §Listening for Messages point 2: client MUST include Accept: text/event-stream.
   const accept = req.headers["accept"] ?? "";
   if (!accept.includes("text/event-stream")) {
+    // GET has no JSON-RPC request body — omit id entirely.
     res.status(406).json({
       jsonrpc: "2.0",
-      id: null,
       error: { code: -32600, message: "Not Acceptable: Accept header must include text/event-stream" },
     });
     return;
@@ -185,11 +209,20 @@ app.get("/mcp", (req: Request, res: Response) => {
 
   const sessionId = typeof req.headers["mcp-session-id"] === "string" ? req.headers["mcp-session-id"] : null;
 
-  if (!sessionId || !sessions.has(sessionId)) {
+  // Spec §Session Management:
+  //   - No header at all → 400 Bad Request (point 2)
+  //   - Header present but session expired/unknown → 404 Not Found (point 3)
+  if (!sessionId) {
     res.status(400).json({
       jsonrpc: "2.0",
-      id: null,
-      error: { code: -32600, message: "Invalid or missing Mcp-Session-Id header" },
+      error: { code: -32600, message: "Missing Mcp-Session-Id header" },
+    });
+    return;
+  }
+  if (!sessions.has(sessionId)) {
+    res.status(404).json({
+      jsonrpc: "2.0",
+      error: { code: -32600, message: "Session not found or expired" },
     });
     return;
   }
