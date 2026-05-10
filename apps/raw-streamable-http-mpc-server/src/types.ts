@@ -64,20 +64,40 @@ export interface McpToolDefinition {
   title?: string;
 }
 
+// Per-stream event buffer (for Last-Event-ID resumption)
+
+export interface BufferedSseEvent {
+  id: string;
+  seqNum: number;
+  /** Full raw SSE frame, e.g. `id: ...\ndata: ...\n\n` */
+  data: string;
+}
+
+export interface StreamLog {
+  streamId: string;
+  sessionId: string;
+  seqCounter: number;
+  events: BufferedSseEvent[];
+}
+
 // Session state
 
 export interface Session {
   id: string;
   initialized: boolean;
   createdAt: Date;
+  /** All SSE stream logs for this session, keyed by streamId. Persists across disconnections for resumption. */
+  streamLogs: Map<string, StreamLog>;
+  /** The streamId of the currently active SSE connection, if any. */
+  activeStreamId?: string;
   /**
-   * Writable stream for server → client push (SSE). Set when the client opens the GET /mcp stream.
+   * Push a JSON-RPC message to the active SSE stream. The message is buffered
+   * for resumption and written to the current connection.
+   * Set by the GET /mcp handler; undefined when no SSE stream is connected.
    * Example:
    * ```ts
-   * const encoder = new TextEncoder();
-   * const data = JSON.stringify({ jsonrpc: '2.0', method: 'tool/update', params: { } });
-   * await session.sseStream?.write(encoder.encode(`data: ${data}\n\n`));
+   * session.pushEvent?.({ jsonrpc: "2.0", method: "notifications/message", params: { ... } });
    * ```
    */
-  sseStream?: WritableStreamDefaultWriter | undefined; // For server → client push
+  pushEvent?: (jsonData: object) => void;
 }

@@ -108,7 +108,7 @@ function handleInitialize(id: JsonRpcId, params: unknown): { response: JsonRpcRe
   }
 
   const sessionId = randomUUID();
-  sessions.set(sessionId, { id: sessionId, initialized: false, createdAt: new Date() });
+  sessions.set(sessionId, { id: sessionId, initialized: false, createdAt: new Date(), streamLogs: new Map() });
 
   const result = {
     protocolVersion: SUPPORTED_PROTOCOL_VERSION,

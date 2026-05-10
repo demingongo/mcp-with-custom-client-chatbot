@@ -2,7 +2,6 @@ import { handleMcpRequest, sessions } from "./handler";
 import type { JsonRpcRequest } from "./types";
 import express, { type NextFunction, type Request, type Response } from "express";
 import { randomUUID } from "node:crypto";
-import { Writable } from "node:stream";
 import pino from "pino";
 
 // ---------------------------------------------------------------------------
@@ -51,7 +50,7 @@ app.use((_req: Request, res: Response, next: NextFunction) => {
   res.set({
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Methods": "GET, POST, DELETE, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type, Mcp-Session-Id",
+    "Access-Control-Allow-Headers": "Content-Type, Mcp-Session-Id, Last-Event-ID",
     "Access-Control-Expose-Headers": "Mcp-Session-Id",
   });
   next();
@@ -86,7 +85,10 @@ app.post("/mcp", (req: Request, res: Response) => {
     res.status(406).json({
       jsonrpc: "2.0",
       id: null,
-      error: { code: -32600, message: "Not Acceptable: Accept header must include application/json and text/event-stream" },
+      error: {
+        code: -32600,
+        message: "Not Acceptable: Accept header must include application/json and text/event-stream",
+      },
     });
     return;
   }
@@ -162,6 +164,9 @@ app.post("/mcp", (req: Request, res: Response) => {
   res.json(response);
 });
 
+// Max number of events to buffer per stream for Last-Event-ID resumption.
+const MAX_BUFFER_SIZE = 500;
+
 // ---------------------------------------------------------------------------
 // GET /mcp — open SSE stream (server → client push)
 // ---------------------------------------------------------------------------
@@ -189,7 +194,45 @@ app.get("/mcp", (req: Request, res: Response) => {
     return;
   }
 
-  log.info({ sessionId }, "SSE stream opened");
+  const session = sessions.get(sessionId)!;
+
+  // Spec §Resumability: parse Last-Event-ID to determine if this is a reconnection.
+  // Expected format: ${sessionId}/${streamId}/${seqNum} — UUIDs contain no slashes,
+  // so splitting by "/" yields exactly 3 parts for a valid ID.
+  const lastEventId = typeof req.headers["last-event-id"] === "string" ? req.headers["last-event-id"] : null;
+
+  let streamId: string;
+  let replayAfter: number | null = null;
+
+  if (lastEventId) {
+    const parts = lastEventId.split("/");
+    const [idSessionId, idStreamId, idSeqStr] = parts;
+    const idSeqNum = idSeqStr !== undefined ? parseInt(idSeqStr, 10) : NaN;
+
+    if (
+      parts.length === 3 &&
+      idSessionId === sessionId &&
+      idStreamId !== undefined &&
+      !isNaN(idSeqNum) &&
+      session.streamLogs.has(idStreamId)
+    ) {
+      // Valid resume: reuse the existing stream log and replay missed events.
+      streamId = idStreamId;
+      replayAfter = idSeqNum;
+      log.info({ sessionId, streamId, replayAfter }, "SSE stream resuming");
+    } else {
+      // Malformed or unknown Last-Event-ID → treat as fresh connection.
+      streamId = randomUUID();
+      session.streamLogs.set(streamId, { streamId, sessionId, seqCounter: 0, events: [] });
+      log.info({ sessionId, streamId }, "SSE stream opened (fresh, unrecognised Last-Event-ID)");
+    }
+  } else {
+    streamId = randomUUID();
+    session.streamLogs.set(streamId, { streamId, sessionId, seqCounter: 0, events: [] });
+    log.info({ sessionId, streamId }, "SSE stream opened");
+  }
+
+  session.activeStreamId = streamId;
 
   res.set({
     "Content-Type": "text/event-stream",
@@ -198,11 +241,38 @@ app.get("/mcp", (req: Request, res: Response) => {
   });
   res.flushHeaders();
 
-  // Spec §Resumability: immediately send a prime event with an event ID so the client
-  // can supply Last-Event-ID on reconnect. ID encodes both session and stream identity.
-  const streamId = randomUUID();
-  res.write(`id: ${sessionId}/${streamId}\ndata: \n\n`);
+  const streamLog = session.streamLogs.get(streamId)!;
 
+  // Build a pushEvent closure that buffers each event and writes it to this connection.
+  // Caller code (e.g. handler.ts) calls session.pushEvent({ ... }) to send server-initiated messages.
+  const pushEvent = (jsonData: object): void => {
+    streamLog.seqCounter += 1;
+    const id = `${sessionId}/${streamId}/${streamLog.seqCounter}`;
+    const frame = `id: ${id}\ndata: ${JSON.stringify(jsonData)}\n\n`;
+    streamLog.events.push({ id, seqNum: streamLog.seqCounter, data: frame });
+    if (streamLog.events.length > MAX_BUFFER_SIZE) {
+      streamLog.events.shift(); // drop oldest to stay within cap
+    }
+    res.write(frame);
+  };
+
+  session.pushEvent = pushEvent;
+
+  // Spec §Resumability: send a prime event (seqNum=0, not buffered) so the client
+  // has an anchor ID to supply as Last-Event-ID on the next reconnection.
+  res.write(`id: ${sessionId}/${streamId}/0\ndata: \n\n`);
+
+  // If resuming, replay buffered events that arrived after replayAfter.
+  // Spec §Resumability: MUST NOT replay events from a different stream.
+  if (replayAfter !== null) {
+    const toReplay = streamLog.events.filter((e) => e.seqNum > replayAfter!);
+    log.info({ sessionId, streamId, replayCount: toReplay.length }, "Replaying SSE events");
+    for (const e of toReplay) {
+      res.write(e.data);
+    }
+  }
+
+  // Keepalive pings — NOT buffered; no value in replaying them on reconnect.
   const pingInterval = setInterval(() => {
     res.write(
       `data: ${JSON.stringify({
@@ -215,16 +285,13 @@ app.get("/mcp", (req: Request, res: Response) => {
 
   req.on("close", () => {
     clearInterval(pingInterval);
-    log.info({ sessionId }, "SSE stream closed");
+    // Clear pushEvent so handler code doesn't write to the closed connection.
+    // Keep streamLog alive so the client can reconnect with Last-Event-ID.
+    if (session.activeStreamId === streamId) {
+      session.pushEvent = undefined;
+    }
+    log.info({ sessionId, streamId }, "SSE stream closed");
   });
-
-  const webWritableStream = Writable.toWeb(res);
-  const writer = webWritableStream.getWriter();
-
-  const session = sessions.get(sessionId);
-  if (session) {
-    session.sseStream = writer;
-  }
 });
 
 // ---------------------------------------------------------------------------
@@ -256,10 +323,8 @@ app.listen(PORT, SERVER_BIND_ADDRESS, () => {
 
 // ---------------------------------------------------------------------------
 // Remarks:
-// 
+//
 // - Spec §Sending Messages point 5: Must return either text/event-stream or application/json.
-// In practice, Express's res.json() will set Content-Type: application/json, and res.write() for SSE will set Content-Type: text/event-stream, so this is handled automatically by using the appropriate method for each response type.
-// 
-// - Spec §Resumability & Redelivery: Server should handle Last-Event-ID header for stream resumption.
-// Current implementation: Ignores this header and Streams are not resumable; full reconnection required.
+// In practice, Express's res.json() will set Content-Type: application/json, and res.write() for SSE
+// will set Content-Type: text/event-stream, so this is handled automatically.
 // ---------------------------------------------------------------------------
