@@ -73,7 +73,7 @@ Express server wiring:
 - CORS headers on every response + `OPTIONS /mcp` preflight handler
 - `express.json()` for body parsing
 - `POST /mcp` validates the JSON-RPC envelope, reads `mcp-session-id` header, attaches `Mcp-Session-Id` to the response on `initialize`
-- `GET /mcp` opens an SSE stream, sends `event: connected` immediately then `event: ping` every 30 s; cleaned up on socket close
+- `GET /mcp` opens an SSE stream, emits a `$/ping` JSON-RPC 2.0 notification every 30 s to keep the connection alive; cleaned up on socket close
 - `DELETE /mcp` removes the session from the store
 - `GET /health` returns `{ status, activeSessions }`
 
@@ -263,7 +263,7 @@ curl -N http://localhost:3001/mcp \
   -H "Mcp-Session-Id: $SESSION_ID"
 ```
 
-The connection stays open and the server emits `event: ping` every 30 seconds. Press `Ctrl+C` to disconnect.
+The connection stays open and the server emits a `$/ping` JSON-RPC 2.0 notification every 30 seconds to keep the connection alive. Press `Ctrl+C` to disconnect.
 
 ---
 

@@ -109,10 +109,12 @@ app.get('/mcp', (req: Request, res: Response) => {
     });
     res.flushHeaders();
 
-    res.write('event: connected\ndata: {}\n\n');
-
     const pingInterval = setInterval(() => {
-        res.write('event: ping\ndata: {}\n\n');
+        res.write(`data: ${JSON.stringify({
+            jsonrpc: "2.0",
+            method: "$/ping", // Custom ignorable method ($/ are implementation-defined extensions)
+            params: {}
+        })}\n\n`);
     }, 30_000);
 
     req.on('close', () => {
