@@ -96,12 +96,26 @@ function toolResult(data: unknown, isError = false): CallToolResult {
 // MCP method handlers
 // ---------------------------------------------------------------------------
 
-function handleInitialize(id: JsonRpcId): { response: JsonRpcResponse; newSessionId: string } {
+const SUPPORTED_PROTOCOL_VERSION = '2025-03-26';
+
+function handleInitialize(
+    id: JsonRpcId,
+    params: unknown,
+): { response: JsonRpcResponse; newSessionId: string } {
+    // Spec §Version Negotiation: always respond with our supported version.
+    // The client MUST disconnect if it cannot support our version.
+    const requestedVersion = (params as { protocolVersion?: string } | null)?.protocolVersion;
+    if (requestedVersion && requestedVersion !== SUPPORTED_PROTOCOL_VERSION) {
+        console.warn(
+            `Client requested protocol version "${requestedVersion}"; server supports "${SUPPORTED_PROTOCOL_VERSION}".`,
+        );
+    }
+
     const sessionId = randomUUID();
     sessions.set(sessionId, { id: sessionId, initialized: false, createdAt: new Date() });
 
     const result = {
-        protocolVersion: '2025-03-26',
+        protocolVersion: SUPPORTED_PROTOCOL_VERSION,
         serverInfo: { name: 'raw-streamable-http-mcp-server', version: '1.0.0' },
         capabilities: {
             tools: { listChanged: false },
@@ -185,15 +199,16 @@ export function handleMcpRequest(req: JsonRpcRequest, sessionId: string | null):
 
     // initialize — no session required
     if (req.method === 'initialize') {
-        const { response, newSessionId } = handleInitialize(id);
+        const { response, newSessionId } = handleInitialize(id, req.params);
         return { response, newSessionId, isNotification: false };
     }
 
-    // all other methods require a valid session
-    const session = sessionId ? sessions.get(sessionId) : undefined;
+    // Session is guaranteed valid by index.ts for all non-initialize methods.
+    // This fallback should never be reached in normal operation.
+    const session = sessions.get(sessionId ?? '');
     if (!session) {
         return {
-            response: rpcError(id, -32600, 'Invalid or missing Mcp-Session-Id header.'),
+            response: rpcError(id, -32600, 'Session not found.'),
             isNotification: false,
         };
     }
