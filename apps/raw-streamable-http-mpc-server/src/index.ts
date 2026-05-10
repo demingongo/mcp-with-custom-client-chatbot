@@ -80,6 +80,17 @@ app.get("/health", (_req: Request, res: Response) => {
 const SUPPORTED_PROTOCOL_VERSIONS = new Set(["2025-11-25"]);
 
 app.post("/mcp", (req: Request, res: Response) => {
+  // Spec §Sending Messages point 2: client MUST include Accept listing both content types.
+  const accept = req.headers["accept"] ?? "";
+  if (!accept.includes("application/json") || !accept.includes("text/event-stream")) {
+    res.status(406).json({
+      jsonrpc: "2.0",
+      id: null,
+      error: { code: -32600, message: "Not Acceptable: Accept header must include application/json and text/event-stream" },
+    });
+    return;
+  }
+
   // Spec §2025-06-18: batching (array bodies) is no longer supported.
   if (Array.isArray(req.body)) {
     res.status(400).json({
@@ -146,6 +157,8 @@ app.post("/mcp", (req: Request, res: Response) => {
     return;
   }
 
+  // Spec §Sending Messages point 5: explicitly declare the content type.
+  res.set("Content-Type", "application/json");
   res.json(response);
 });
 
@@ -154,6 +167,17 @@ app.post("/mcp", (req: Request, res: Response) => {
 // ---------------------------------------------------------------------------
 
 app.get("/mcp", (req: Request, res: Response) => {
+  // Spec §Listening for Messages point 2: client MUST include Accept: text/event-stream.
+  const accept = req.headers["accept"] ?? "";
+  if (!accept.includes("text/event-stream")) {
+    res.status(406).json({
+      jsonrpc: "2.0",
+      id: null,
+      error: { code: -32600, message: "Not Acceptable: Accept header must include text/event-stream" },
+    });
+    return;
+  }
+
   const sessionId = typeof req.headers["mcp-session-id"] === "string" ? req.headers["mcp-session-id"] : null;
 
   if (!sessionId || !sessions.has(sessionId)) {
@@ -229,3 +253,13 @@ app.listen(PORT, SERVER_BIND_ADDRESS, () => {
   log.info(`  POST/GET/DELETE  http://localhost:${PORT}/mcp`);
   log.info(`  GET              http://localhost:${PORT}/health`);
 });
+
+// ---------------------------------------------------------------------------
+// Remarks:
+// 
+// - Spec §Sending Messages point 5: Must return either text/event-stream or application/json.
+// In practice, Express's res.json() will set Content-Type: application/json, and res.write() for SSE will set Content-Type: text/event-stream, so this is handled automatically by using the appropriate method for each response type.
+// 
+// - Spec §Resumability & Redelivery: Server should handle Last-Event-ID header for stream resumption.
+// Current implementation: Ignores this header and Streams are not resumable; full reconnection required.
+// ---------------------------------------------------------------------------
