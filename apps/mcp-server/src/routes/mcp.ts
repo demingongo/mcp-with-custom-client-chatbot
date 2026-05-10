@@ -125,7 +125,7 @@ export const toolsV2Route: KaapiServerRoute = {
                   // const key = `${param.in}_${param.name}`; // prefix with 'query_' or 'path_' to avoid name collisions
                   const key = `${param.name}`;
                   if (param.schema && "type" in param.schema && param.schema.type) {
-                    inputSchema.properties[key] = param.schema
+                    inputSchema.properties[key] = param.schema;
                   } else {
                     inputSchema.properties[key] = {
                       type: "string", // For simplicity, we treat all parameters as strings in this example.
@@ -141,8 +141,13 @@ export const toolsV2Route: KaapiServerRoute = {
               }
 
               // 2. Process Request Body (Flattening objects into the root)
-              if ("requestBody" in op && op.requestBody && typeof op.requestBody === "object" &&
-                "content" in op.requestBody && op.requestBody.content && typeof op.requestBody.content === "object"
+              if (
+                "requestBody" in op &&
+                op.requestBody &&
+                typeof op.requestBody === "object" &&
+                "content" in op.requestBody &&
+                op.requestBody.content &&
+                typeof op.requestBody.content === "object"
               ) {
                 const bodySchema = op.requestBody?.content?.["application/json"]?.schema;
                 if (bodySchema && typeof bodySchema === "object" && "type" in bodySchema && bodySchema.type) {
