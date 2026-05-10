@@ -70,4 +70,14 @@ export interface Session {
     id: string;
     initialized: boolean;
     createdAt: Date;
+    /**
+     * Writable stream for server → client push (SSE). Set when the client opens the GET /mcp stream.
+     * Example:
+     * ```ts
+     * const encoder = new TextEncoder();
+     * const data = JSON.stringify({ jsonrpc: '2.0', method: 'tool/update', params: { } });
+     * await session.sseStream?.write(encoder.encode(`data: ${data}\n\n`));
+     * ```
+     */
+    sseStream?: WritableStreamDefaultWriter | undefined; // For server → client push
 }

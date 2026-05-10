@@ -1,5 +1,6 @@
 import express, { type NextFunction, type Request, type Response } from 'express';
 import pino from 'pino';
+import { Writable } from 'node:stream';
 import { handleMcpRequest, sessions } from './handler';
 import type { JsonRpcRequest } from './types';
 
@@ -121,6 +122,14 @@ app.get('/mcp', (req: Request, res: Response) => {
         clearInterval(pingInterval);
         log.info({ sessionId }, 'SSE stream closed');
     });
+
+    const webWritableStream = Writable.toWeb(res);
+    const writer = webWritableStream.getWriter();
+
+    const session = sessions.get(sessionId);
+    if (session) {
+        session.sseStream = writer;
+    }
 });
 
 // ---------------------------------------------------------------------------
