@@ -5,6 +5,8 @@ import { handleMcpRequest, sessions } from "../services/mcp/handler";
 import { z } from "zod";
 import { applyModifiers, groupResponses, MediaTypeModifier, ResponseDocsModifier } from "@kaapi/kaapi";
 import Boom from "@hapi/boom";
+import { randomUUID } from "node:crypto";
+import { PassThrough } from 'node:stream';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -46,7 +48,6 @@ export const mcpPostRoute = applyModifiers(withSchema({
   headers: z.looseObject({
     "mcp-protocol-version": z.enum(["2025-11-25"]).optional(),
     "mcp-session-id": z.string().optional(),
-    "last-event-id": z.string().optional(),
   }).catchall(z.string()),
   payload: z.object({
     jsonrpc: z.enum(["2.0"]),
@@ -321,6 +322,10 @@ export const mcpPostRoute = applyModifiers(withSchema({
   }
 );
 
+// ---------------------------------------------------------------------------
+// DELETE /mcp — end session
+// ---------------------------------------------------------------------------
+
 export const mcpDeleteRoute = applyModifiers({
   method: "delete",
   path: "/mcp",
@@ -359,5 +364,216 @@ export const mcpDeleteRoute = applyModifiers({
         })
       )
       .setCode(404)
+  ),
+});
+
+// ---------------------------------------------------------------------------
+// GET /mcp — open SSE stream (server → client push)
+// ---------------------------------------------------------------------------
+
+// Max number of events to buffer per stream for Last-Event-ID resumption.
+const MAX_BUFFER_SIZE = 500;
+
+export const mcpGetRoute = applyModifiers(withSchema({
+  headers: z.looseObject({
+    "mcp-session-id": z.string().nonempty(),
+    "last-event-id": z.string().optional(),
+  }).catchall(z.string()),
+  failAction: (request, h, err) => {
+    log.warn(`Invalid request payload: ${err?.message}`);
+    let message = "Invalid Request: " + err?.message;
+    if (Boom.isBoom(err)) {
+      const validationError: z.ZodError = err.data.validationError;
+      const issue = validationError.issues[0];
+      if (issue) {
+        if (issue.path[0] === "headers" && issue.path[1] === "mcp-session-id") {
+          message = "Missing Mcp-Session-Id header";
+        }
+      }
+    }
+    const response: JsonRpcErrorResponse = {
+      jsonrpc: "2.0",
+      id: extractId(request.payload),
+      error: {
+        code: -32600,
+        message: message,
+      },
+    };
+    return h.response(response).code(400).takeover();
+  }
+}).route({
+  handler: (request, h) => {
+    const sessionId = request.headers["mcp-session-id"];
+
+    if (!sessions.has(sessionId)) {
+      return h.response({
+        jsonrpc: "2.0",
+        error: { code: -32600, message: "Session not found or expired" },
+      }).code(404);
+    }
+
+    const session = sessions.get(sessionId)!;
+
+    // Spec §Resumability: parse Last-Event-ID to determine if this is a reconnection.
+    // Expected format: ${sessionId}/${streamId}/${seqNum} — UUIDs contain no slashes,
+    // so splitting by "/" yields exactly 3 parts for a valid ID.
+    const lastEventId = typeof request.headers["last-event-id"] === "string" ? request.headers["last-event-id"] : null;
+
+    let streamId: string;
+    let replayAfter: number | null = null;
+
+    if (lastEventId) {
+      const parts = lastEventId.split("/");
+      const [idSessionId, idStreamId, idSeqStr] = parts;
+      const idSeqNum = idSeqStr !== undefined ? parseInt(idSeqStr, 10) : NaN;
+
+      if (
+        parts.length === 3 &&
+        idSessionId === sessionId &&
+        idStreamId !== undefined &&
+        !isNaN(idSeqNum) &&
+        session.streamLogs.has(idStreamId)
+      ) {
+        // Valid resume: reuse the existing stream log and replay missed events.
+        streamId = idStreamId;
+        replayAfter = idSeqNum;
+        log.info({ sessionId, streamId, replayAfter }, "SSE stream resuming");
+      } else {
+        // Malformed or unknown Last-Event-ID → treat as fresh connection.
+        streamId = randomUUID();
+        session.streamLogs.set(streamId, { streamId, sessionId, seqCounter: 0, events: [] });
+        log.info({ sessionId, streamId }, "SSE stream opened (fresh, unrecognised Last-Event-ID)");
+      }
+    } else {
+      streamId = randomUUID();
+      session.streamLogs.set(streamId, { streamId, sessionId, seqCounter: 0, events: [] });
+      log.info({ sessionId, streamId }, "SSE stream opened");
+    }
+
+    session.activeStreamId = streamId;
+
+    const stream = new PassThrough();
+
+    const res = h.response(stream)
+      .header('Content-Type', 'text/event-stream')
+      .header('Cache-Control', 'no-cache')
+      .header('Connection', 'keep-alive');
+
+    const streamLog = session.streamLogs.get(streamId)!;
+
+    // Build a pushEvent closure that buffers each event and writes it to this connection.
+    // Caller code (e.g. handler.ts) calls session.pushEvent({ ... }) to send server-initiated messages.
+    const pushEvent = (jsonData: object): void => {
+      streamLog.seqCounter += 1;
+      const id = `${sessionId}/${streamId}/${streamLog.seqCounter}`;
+      const frame = `id: ${id}\ndata: ${JSON.stringify(jsonData)}\n\n`;
+      streamLog.events.push({ id, seqNum: streamLog.seqCounter, data: frame });
+      if (streamLog.events.length > MAX_BUFFER_SIZE) {
+        streamLog.events.shift(); // drop oldest to stay within cap
+      }
+      stream.write(frame);
+    };
+
+    session.pushEvent = pushEvent;
+
+    // Spec §Resumability: send a prime event (seqNum=0, not buffered) so the client
+    // has an anchor ID to supply as Last-Event-ID on the next reconnection.
+    stream.write(`id: ${sessionId}/${streamId}/0\ndata: \n\n`);
+
+    // If resuming, replay buffered events that arrived after replayAfter.
+    // Spec §Resumability: MUST NOT replay events from a different stream.
+    if (replayAfter !== null) {
+      const toReplay = streamLog.events.filter((e) => e.seqNum > replayAfter!);
+      log.info({ sessionId, streamId, replayCount: toReplay.length }, "Replaying SSE events");
+      for (const e of toReplay) {
+        stream.write(e.data);
+      }
+    }
+
+    // Keepalive pings — NOT buffered; no value in replaying them on reconnect.
+    const pingInterval = setInterval(() => {
+      stream.write(
+        `data: ${JSON.stringify({
+          jsonrpc: "2.0",
+          method: "$/ping", // Custom ignorable method ($/ are implementation-defined extensions)
+          params: {},
+        })}\n\n`
+      );
+    }, 30_000);
+
+    request.raw.req.on('close', () => {
+      clearInterval(pingInterval);
+      // Clear pushEvent so handler code doesn't write to the closed connection.
+      // Keep streamLog alive so the client can reconnect with Last-Event-ID.
+      if (session.activeStreamId === streamId) {
+        session.pushEvent = undefined;
+      }
+      log.info({ sessionId, streamId }, "SSE stream closed");
+      stream.end();
+    });
+
+    return res;
+  },
+  method: "get",
+  path: "/mcp",
+  options: {
+    description: "Endpoint for establishing SSE connection for server-to-client messages",
+    tags: ["MCP"],
+    id: "mcp_get",
+    ext: {
+      onPostAuth: {
+        method: (request, h) => {
+          // Spec §Sending Messages point 2: client MUST include Accept listing both content types.
+          const accept = request.headers.accept ?? "";
+          if (
+            !accept.includes("*/*") &&
+            !accept.includes("text/event-stream")
+          ) {
+            return h.response({
+              jsonrpc: "2.0",
+              id: extractId(request.payload),
+              error: {
+                code: -32600,
+                message: "Not Acceptable: Accept header must include text/event-stream",
+              },
+            }).code(406).takeover();
+          }
+          return h.continue;
+        }
+      }
+    }
+  },
+}), {
+  responses: groupResponses(
+    new ResponseDocsModifier()
+      .setDescription("SSE stream established successfully")
+      .addMediaType(
+        "text/event-stream"
+      )
+      .setName("MCP SSE Stream"),
+    new ResponseDocsModifier()
+      .setDescription("Error")
+      .addMediaType(
+        "application/json",
+        new MediaTypeModifier({
+          schema: {
+            type: "object",
+            properties: {
+              jsonrpc: { type: "string", enum: ["2.0"] },
+              id: { type: ["string", "number"] },
+              error: {
+                type: "object",
+                properties: {
+                  code: { type: "number" },
+                  message: { type: "string" },
+                  data: {},
+                },
+                required: ["code", "message"],
+              },
+            },
+          },
+        })
+      )
+      .setName("MCP JSON-RPC Error Response"),
   ),
 });

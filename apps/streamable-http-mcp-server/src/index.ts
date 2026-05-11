@@ -1,6 +1,6 @@
 import { app } from "./apps/http-app";
 import { healthRoute } from "./routes/health";
-import { mcpDeleteRoute, mcpPostRoute } from "./routes/mcp";
+import { mcpDeleteRoute, mcpGetRoute, mcpPostRoute } from "./routes/mcp";
 import { publicFilesRoute } from "./routes/public";
 import { log } from "./services/log-service";
 
@@ -13,6 +13,7 @@ app
 
     // MCP endpoint
     .route(mcpPostRoute)
+    .route(mcpGetRoute)
     .route(mcpDeleteRoute);
 
 // start the server
