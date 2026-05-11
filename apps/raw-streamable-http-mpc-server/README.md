@@ -22,10 +22,12 @@ Streamable HTTP is the modern MCP transport (introduced 2025). All communication
 
 ```
 src/
-  types.ts    — TypeScript types for JSON-RPC 2.0 and MCP primitives
-  data.ts     — Simulated book library (6 hardcoded books)
-  handler.ts  — MCP JSON-RPC dispatcher + in-memory session store
-  index.ts    — Express HTTP server (Streamable HTTP transport)
+  types.ts              — TypeScript types for JSON-RPC 2.0 and MCP primitives
+  data.ts               — Simulated book library (6 hardcoded books)
+  handler.ts            — MCP JSON-RPC dispatcher + in-memory session store
+  index.ts              — Express HTTP server (Streamable HTTP transport)
+  client-examples/
+    mcp-client.ts       — Minimal TypeScript MCP client (reference/testing only)
 ```
 
 ### `types.ts`
@@ -35,7 +37,8 @@ Defines all protocol types with no runtime footprint:
 - **JSON-RPC 2.0**: `JsonRpcRequest`, `JsonRpcSuccessResponse`, `JsonRpcErrorResponse`, `JsonRpcResponse`
 - **MCP content blocks**: `TextContent`, `ImageContent`, `McpContent`
 - **MCP tool layer**: `CallToolResult`, `McpToolDefinition`, `McpToolInputSchema`
-- **Session**: `Session` (id, initialized, createdAt)
+- **SSE resumption**: `BufferedSseEvent` (id, seqNum, raw SSE frame), `StreamLog` (streamId, sessionId, seqCounter, buffered events)
+- **Session state**: `Session` (id, initialized, createdAt, streamLogs, activeStreamId, pushEvent)
 
 ### `data.ts`
 
@@ -70,12 +73,45 @@ Available tools:
 
 Express server wiring:
 
-- CORS headers on every response + `OPTIONS /mcp` preflight handler
+- DNS rebinding protection — validates the `Origin` header on all requests when bound to localhost; non-localhost origins are rejected with HTTP 403
+- CORS headers on every response + `OPTIONS /mcp` preflight handler (HTTP 204)
 - `express.json()` for body parsing
-- `POST /mcp` validates the JSON-RPC envelope, reads `mcp-session-id` header, attaches `Mcp-Session-Id` to the response on `initialize`
-- `GET /mcp` opens an SSE stream, emits a `$/ping` JSON-RPC 2.0 notification every 30 s to keep the connection alive; cleaned up on socket close
+- `POST /mcp` — enforces `Accept: application/json, text/event-stream` on every request (HTTP 406 if missing); enforces `MCP-Protocol-Version: 2025-11-25` on every non-`initialize` request (HTTP 400 if missing/unsupported); validates the JSON-RPC 2.0 envelope; attaches `Mcp-Session-Id` to the response on `initialize`
+- `GET /mcp` — enforces `Accept: text/event-stream`; opens a persistent SSE stream with `Last-Event-ID` resumption and a 500-event buffer per stream; emits a `$/ping` notification every 30 s as a keepalive; cleans up the `pushEvent` closure on socket close
 - `DELETE /mcp` removes the session from the store
 - `GET /health` returns `{ status, activeSessions }`
+
+---
+
+## Protocol Compliance — MCP 2025-11-25
+
+This server targets the **MCP 2025-11-25** specification. The table below summarises which parts of the spec are implemented and which optional features are intentionally omitted.
+
+### Implemented (required or used)
+
+| Area | Details |
+|------|---------|
+| **JSON-RPC 2.0 Base Protocol** | All messages follow the JSON-RPC 2.0 wire format. Requests include a string/integer `id` (never `null`); notifications omit `id`; error responses echo the request `id` when parseable, or omit it entirely when the body is unparseable — matching the spec requirement that `id` MUST NOT be `null`. |
+| **Streamable HTTP Transport** | Single `/mcp` endpoint supports `POST` (client → server messages), `GET` (server-push SSE stream), and `DELETE` (session termination). The `Accept` header is validated on every request: `POST` requires both `application/json` and `text/event-stream`; `GET` requires `text/event-stream`. JSON-RPC batching (array bodies) is rejected with HTTP 400 as required since 2025-06-18. |
+| **Session Management** | A session UUID is created on `initialize` and returned in `Mcp-Session-Id`. All subsequent requests must supply that header — missing header → HTTP 400, unknown/expired session → HTTP 404. Sessions are explicitly terminated via `DELETE /mcp` (HTTP 204). |
+| **Protocol Version Header** | Every non-`initialize` request must include `MCP-Protocol-Version: 2025-11-25`. Absent or unsupported values are rejected with HTTP 400. The server always responds with `protocolVersion: "2025-11-25"` in the `initialize` result, and the client SHOULD disconnect if it cannot support that version. |
+| **DNS Rebinding Protection** | When bound to localhost (`127.0.0.1`), the `Origin` header is validated on every incoming request. Browser-originated requests with a non-localhost `Origin` are rejected with HTTP 403 Forbidden, preventing DNS-rebinding attacks. Non-browser clients (no `Origin` header) are allowed through. |
+| **SSE Stream Management** | The `GET /mcp` handler opens a persistent SSE stream. Each event is assigned a globally unique `id` of the form `{sessionId}/{streamId}/{seqNum}`. A prime event (`seqNum=0`) is sent immediately so the client has an anchor `Last-Event-ID` for reconnection. On reconnect, buffered events (`MAX_BUFFER_SIZE = 500`) are replayed in order, never across stream boundaries. Keepalive `$/ping` notifications are emitted every 30 s (not buffered — no value replaying them). The `pushEvent` closure is cleared on disconnect to prevent writes to a closed socket. |
+| **Initialization Phase** | `initialize` → `notifications/initialized` → operation, as required. The server returns `protocolVersion`, `serverInfo` (name, title, version), `capabilities`, and optional `instructions`. The session is not considered active until `notifications/initialized` is received: `tools/call` rejects calls made before that point. `ping` is handled at all times, matching the spec allowance for pings before full initialization. |
+| **HTTP Transport Details** | Notification/response bodies (e.g. `notifications/initialized`) return HTTP 202 Accepted with no body. JSON-RPC requests return `Content-Type: application/json` with the response object. SSE streams return `Content-Type: text/event-stream` with `Cache-Control: no-cache` and `Connection: keep-alive`. |
+| **CORS Headers** | Every response includes `Access-Control-Allow-Origin: *`, `Access-Control-Allow-Methods`, `Access-Control-Allow-Headers` (including `Mcp-Session-Id` and `Last-Event-ID`), and `Access-Control-Expose-Headers: Mcp-Session-Id`. `OPTIONS /mcp` preflight requests return HTTP 204. |
+
+### Not implemented (all optional per spec)
+
+| Feature | Why omitted |
+|---------|------------|
+| **Resources** (`resources` capability) | No file system or external data source to expose; the book catalogue is surfaced as tools instead. |
+| **Prompts** (`prompts` capability) | No pre-canned prompt templates needed for this reference implementation. |
+| **Logging** (server-initiated `notifications/message`) | Server logs go to `stderr` via pino; no need to forward them to the client over SSE. |
+| **Completion** (`completions` capability) | Argument auto-complete is a UX enhancement — out of scope for a minimal reference server. |
+| **Sampling** (client `sampling` capability) | Server-initiated LLM calls require a host with an LLM; not applicable here. |
+| **Roots / Elicitation** (client capabilities) | No filesystem boundary negotiation or user-prompt flows needed. |
+| **Task management** (`tasks` capability, experimental) | Experimental feature — all tool calls are synchronous and complete within a single request. |
 
 ---
 
@@ -115,12 +151,13 @@ curl http://localhost:3001/health
 ```bash
 curl -si -X POST http://localhost:3001/mcp \
   -H "Content-Type: application/json" \
+  -H "Accept: application/json, text/event-stream" \
   -d '{
     "jsonrpc": "2.0",
     "id": 1,
     "method": "initialize",
     "params": {
-      "protocolVersion": "2025-03-26",
+      "protocolVersion": "2025-11-25",
       "clientInfo": { "name": "curl-client", "version": "0.0.1" },
       "capabilities": {}
     }
@@ -146,7 +183,9 @@ SESSION_ID="<uuid from header>"
 ```bash
 curl -si -X POST http://localhost:3001/mcp \
   -H "Content-Type: application/json" \
+  -H "Accept: application/json, text/event-stream" \
   -H "Mcp-Session-Id: $SESSION_ID" \
+  -H "MCP-Protocol-Version: 2025-11-25" \
   -d '{
     "jsonrpc": "2.0",
     "method": "notifications/initialized"
@@ -162,7 +201,9 @@ Expected: **HTTP 202** with an empty body. The session is now fully active.
 ```bash
 curl -s -X POST http://localhost:3001/mcp \
   -H "Content-Type: application/json" \
+  -H "Accept: application/json, text/event-stream" \
   -H "Mcp-Session-Id: $SESSION_ID" \
+  -H "MCP-Protocol-Version: 2025-11-25" \
   -d '{
     "jsonrpc": "2.0",
     "id": 2,
@@ -179,7 +220,9 @@ Returns the definitions for `list_books`, `get_book`, and `search_books`.
 ```bash
 curl -s -X POST http://localhost:3001/mcp \
   -H "Content-Type: application/json" \
+  -H "Accept: application/json, text/event-stream" \
   -H "Mcp-Session-Id: $SESSION_ID" \
+  -H "MCP-Protocol-Version: 2025-11-25" \
   -d '{
     "jsonrpc": "2.0",
     "id": 3,
@@ -198,7 +241,9 @@ curl -s -X POST http://localhost:3001/mcp \
 ```bash
 curl -s -X POST http://localhost:3001/mcp \
   -H "Content-Type: application/json" \
+  -H "Accept: application/json, text/event-stream" \
   -H "Mcp-Session-Id: $SESSION_ID" \
+  -H "MCP-Protocol-Version: 2025-11-25" \
   -d '{
     "jsonrpc": "2.0",
     "id": 4,
@@ -217,7 +262,9 @@ curl -s -X POST http://localhost:3001/mcp \
 ```bash
 curl -s -X POST http://localhost:3001/mcp \
   -H "Content-Type: application/json" \
+  -H "Accept: application/json, text/event-stream" \
   -H "Mcp-Session-Id: $SESSION_ID" \
+  -H "MCP-Protocol-Version: 2025-11-25" \
   -d '{
     "jsonrpc": "2.0",
     "id": 5,
@@ -242,7 +289,9 @@ Pass a non-existent ID to see the `isError: true` response:
 ```bash
 curl -s -X POST http://localhost:3001/mcp \
   -H "Content-Type: application/json" \
+  -H "Accept: application/json, text/event-stream" \
   -H "Mcp-Session-Id: $SESSION_ID" \
+  -H "MCP-Protocol-Version: 2025-11-25" \
   -d '{
     "jsonrpc": "2.0",
     "id": 6,
@@ -260,6 +309,7 @@ curl -s -X POST http://localhost:3001/mcp \
 
 ```bash
 curl -N http://localhost:3001/mcp \
+  -H "Accept: text/event-stream" \
   -H "Mcp-Session-Id: $SESSION_ID"
 ```
 
