@@ -1,14 +1,23 @@
-import { APP_DESCRIPTION, APP_NAME, APP_VERSION, EXTERNAL_URI, PORT, SERVER_BIND_ADDRESS } from "../config/app";
+import {
+  APP_DESCRIPTION,
+  APP_NAME,
+  APP_VERSION,
+  DOC_PATH,
+  EXTERNAL_URI,
+  PORT,
+  SERVER_BIND_ADDRESS,
+} from "../config/app";
 import { LOG_LEVEL } from "../config/log";
+import Boom from "@hapi/boom";
 //import { badRequestResponse } from "../utils/responses";
 //import { errorSchema } from "../utils/schemas";
 import inert from "@hapi/inert";
 import {
-  //groupResponses, 
-  Kaapi
+  //groupResponses,
+  Kaapi,
 } from "@kaapi/kaapi";
 import { validatorZod } from "@kaapi/validator-zod";
-import Boom from "@hapi/boom";
+import hapiScalar from "hapi-scalar";
 
 const LOCAL_BIND_ADDRESSES = new Set(["127.0.0.1", "localhost"]);
 const isLocalBind = LOCAL_BIND_ADDRESSES.has(SERVER_BIND_ADDRESS);
@@ -36,7 +45,7 @@ export const app = new Kaapi({
   // DocsConfig
   docs: {
     disabled: false,
-    path: "/docs/api",
+    path: DOC_PATH,
     title: APP_NAME,
     license: {
       name: "",
@@ -81,10 +90,30 @@ export const app = new Kaapi({
   },
 });
 
+// to use zod validation
 await app.extend(validatorZod);
+// to serve static files
 await app.extend({
   async integrate(t) {
     await t.server.register(inert);
+  },
+});
+// to serve Scalar UI for API docs
+await app.extend({
+  async integrate(t) {
+    await t.server.register({
+      plugin: hapiScalar,
+      options: {
+        routePrefix: "/scalar",
+        scalarConfig: {
+          url: `${DOC_PATH}/schema`,
+          theme: "mars",
+          pageTitle: `${APP_NAME}`,
+          showDeveloperTools: "never",
+          darkMode: false,
+        },
+      },
+    });
   },
 });
 
@@ -93,17 +122,17 @@ await app.extend({
 // preventing remote websites from reaching a locally-running server via DNS rebinding.
 if (isLocalBind) {
   app.base().ext("onPreAuth", (request, h) => {
-    const origin = request.headers['origin'];
+    const origin = request.headers["origin"];
     // Non-browser clients (curl, MCP clients) do not send an Origin header — allow them.
     // Browser requests must originate from a localhost origin.
     if (typeof origin !== "undefined") {
-      const isLocalOrigin = origin === 'null' || /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(
-        Array.isArray(origin) ? origin[0] : origin
-      );
+      const isLocalOrigin =
+        origin === "null" ||
+        /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(Array.isArray(origin) ? origin[0] : origin);
 
       if (!isLocalOrigin) {
         // This immediately stops the request and returns a 403
-        throw Boom.forbidden('Forbidden: cross-origin request rejected');
+        throw Boom.forbidden("Forbidden: cross-origin request rejected");
       }
     }
     return h.continue;

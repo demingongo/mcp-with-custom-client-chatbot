@@ -1,4 +1,3 @@
-import { BOOKS } from "./data";
 import type {
   CallToolResult,
   JsonRpcErrorResponse,
@@ -9,6 +8,7 @@ import type {
   McpToolDefinition,
   Session,
 } from "../../types";
+import { BOOKS } from "./data";
 import { randomUUID } from "node:crypto";
 
 // ---------------------------------------------------------------------------
@@ -97,7 +97,10 @@ function toolResult(data: unknown, isError = false): CallToolResult {
 
 const SUPPORTED_PROTOCOL_VERSION = "2025-11-25";
 
-function handleInitialize(id: JsonRpcId | undefined, params: unknown): { response: JsonRpcResponse; newSessionId: string } {
+function handleInitialize(
+  id: JsonRpcId | undefined,
+  params: unknown
+): { response: JsonRpcResponse; newSessionId: string } {
   // Spec §Version Negotiation: always respond with our supported version.
   // The client MUST disconnect if it cannot support our version.
   const requestedVersion = (params as { protocolVersion?: string } | null)?.protocolVersion;
