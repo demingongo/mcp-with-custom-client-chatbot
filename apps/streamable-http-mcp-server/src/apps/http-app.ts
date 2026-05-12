@@ -36,7 +36,7 @@ export const app = new Kaapi({
   routes: {
     cors: {
       origin: ["*"],
-      additionalHeaders: ["Mcp-Session-Id", "Last-Event-ID"],
+      additionalHeaders: ["Mcp-Session-Id", "Last-Event-ID", "Mcp-Protocol-Version"],
       additionalExposedHeaders: ["Mcp-Session-Id"],
       preflightStatusCode: 204,
     },

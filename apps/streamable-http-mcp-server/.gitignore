@@ -1,0 +1,5 @@
+src/product-types.*
+#src/routes/products.*
+src/services/product-service.*
+src/utils/responses.*
+src/utils/schemas.*

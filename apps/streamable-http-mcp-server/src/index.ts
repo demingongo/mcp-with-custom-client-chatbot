@@ -4,6 +4,21 @@ import { mcpDeleteRoute, mcpGetRoute, mcpPostRoute } from "./routes/mcp";
 import { publicFilesRoute } from "./routes/public";
 import { log } from "./services/log-service";
 
+app.base().ext("onRequest", (request, h) => {
+  log.debug({ payload: request.payload }, `Incoming request: ${request.method.toUpperCase()} ${request.path}`);
+  return h.continue;
+});
+
+app.base().ext("onPreResponse", (request, h) => {
+  const response = request.response;
+  if ("isBoom" in response && response.isBoom) {
+    log.error({ error: response }, `Error response for ${request.method.toUpperCase()} ${request.path}`);
+  } else {
+    log.debug({ statusCode: "statusCode" in response && response.statusCode }, `Response for ${request.method.toUpperCase()} ${request.path}`);
+  }
+  return h.continue;
+});
+
 app
   // health check endpoint
   .route(healthRoute)
