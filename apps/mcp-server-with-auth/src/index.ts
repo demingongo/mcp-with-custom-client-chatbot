@@ -1,26 +1,10 @@
 import { app } from "./apps/http-app";
+import { oauthAuthorizationServerRoute, oauthRegistrationRoute, oauthProtectedResourceRoute } from "./routes/auth";
 import { healthRoute } from "./routes/health";
 import { mcpDeleteRoute, mcpGetRoute, mcpPostRoute } from "./routes/mcp";
 import { publicFilesRoute } from "./routes/public";
+import oidcAuthFlows from "./security/oidc-multiple-flows";
 import { log } from "./services/log-service";
-
-app.base().ext("onRequest", (request, h) => {
-  log.debug({ payload: request.payload }, `Incoming request: ${request.method.toUpperCase()} ${request.path}`);
-  return h.continue;
-});
-
-app.base().ext("onPreResponse", (request, h) => {
-  const response = request.response;
-  if ("isBoom" in response && response.isBoom) {
-    log.error({ error: response }, `Error response for ${request.method.toUpperCase()} ${request.path}`);
-  } else {
-    log.debug(
-      { statusCode: "statusCode" in response && response.statusCode },
-      `Response for ${request.method.toUpperCase()} ${request.path}`
-    );
-  }
-  return h.continue;
-});
 
 app
   // health check endpoint
@@ -32,10 +16,22 @@ app
   // MCP endpoint
   .route(mcpPostRoute)
   .route(mcpGetRoute)
-  .route(mcpDeleteRoute);
+  .route(mcpDeleteRoute)
+
+  // auth endpoint
+  .route(oauthProtectedResourceRoute)
+  .route(oauthAuthorizationServerRoute)
+  .route(oauthRegistrationRoute);
 
 // start the server
 await app.listen();
+
+// Generate keys at launch
+await oidcAuthFlows.checkAndRotateKeys();
+// Key rotation check every hour (rotation happens according to jwksRotatorOptions.intervalMs)
+setInterval(() => {
+  oidcAuthFlows.checkAndRotateKeys().catch(app.log.error);
+}, 3600 * 1000); // 1h
 
 // log server info
 const BASE_URI = process.env.EXTERNAL_URI || app.base().info.uri;
