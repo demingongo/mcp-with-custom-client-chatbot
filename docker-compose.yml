@@ -20,7 +20,7 @@ services:
       - NODE_ENV=production
       - PORT=3000
       - MCP_BASE_URL=http://mcp-server:3001
-      - OLLAMA_MODEL=${OLLAMA_MODEL:-gemma4:latest}
+      - OLLAMA_MODEL=${OLLAMA_MODEL:-qwen2.5:3b}
       - OLLAMA_BASE_URL=http://ollama:11434
     depends_on:
       mcp-server:
@@ -55,4 +55,4 @@ services:
     # ollama doesn't have a built-in way to run a model on startup,
     # so we use the entrypoint to start the server and then run the model
     entrypoint: /bin/sh
-    command: -c "ollama serve & sleep 5 && ollama run ${OLLAMA_MODEL:-gemma4:latest} && wait"
+    command: -c "ollama serve & sleep 5 && ollama run ${OLLAMA_MODEL:-qwen2.5:3b} && wait"

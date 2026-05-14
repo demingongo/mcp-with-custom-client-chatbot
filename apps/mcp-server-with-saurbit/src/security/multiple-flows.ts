@@ -1,7 +1,8 @@
 import { OIDCMultipleFlows } from "@saurbit/oauth2";
 import { flow as authCodeFlow } from "./authorization-code";
+import { flow as clientCredentialsFlow } from "./client-credentials";
 
-const flows = [authCodeFlow];
+const flows = [authCodeFlow, clientCredentialsFlow];
 
 export const multipleFlows = new OIDCMultipleFlows({
   flows: flows,

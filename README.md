@@ -23,20 +23,20 @@ ConnectAuz product assistant — a local chat app that answers questions about [
 
 ## Run with Docker Compose
 
-_Note: With the default model (`gemma4:latest`), the image requires **10 GB of disk space** and will use at least **12 GB of RAM** to load and run effectively. Ensure your Docker environment is configured with sufficient resources. Update the `OLLAMA_MODEL` in `model.env` if you want to use a smaller model. Update `docker-compose.yml` if you want to [enable GPU support](https://docs.ollama.com/docker)._
+_Note: With the default model (`qwen2.5:3b`), the image requires **2 GB of disk space** and will use at least **~2.5 GB of RAM** to load and run effectively. Ensure your Docker environment is configured with sufficient resources. Update the `OLLAMA_MODEL` in `model.env` if you want to use another model. Update `docker-compose.yml` if you want to [enable GPU support](https://docs.ollama.com/docker)._
 
 ```bash
-docker-compose --env-file model.env up --build -d
+docker compose --env-file model.env up --build -d
 ```
 
-On first run, the backend may fail until Ollama finishes pulling the model. Check logs with `docker-compose logs -f ollama` and wait for the "llama runner started" message. Ollama will persist the model locally in `.docker-compose/ollama/data`, so subsequent runs should be faster.
+On first run, the backend may fail until Ollama finishes pulling the model. Check logs with `docker compose logs -f ollama` and wait for the "llama runner started" message. Ollama will persist the model locally in `.docker-compose/ollama/data`, so subsequent runs should be faster.
 
 ## Run locally without Docker
 
 ### Prerequisites
 
 - Node.js 20+
-- [Ollama](https://ollama.com) running locally with a model pulled (default: `gemma4:latest`)
+- [Ollama](https://ollama.com) running locally with a model pulled (default: `qwen2.5:3b`)
 
 ### Setup
 
@@ -79,7 +79,7 @@ Backend env vars:
 | ----------------- | ------------------------ | ------------------- |
 | `PORT`            | `3000`                   | Backend HTTP port   |
 | `OLLAMA_BASE_URL` | `http://localhost:11434` | Ollama endpoint     |
-| `OLLAMA_MODEL`    | `gemma4:latest`          | Model name          |
+| `OLLAMA_MODEL`    | `qwen2.5:3b`             | Model name          |
 | `MCP_BASE_URL`    | `http://localhost:3001`  | MCP server endpoint |
 | `LOG_LEVEL`       | `debug`                  | Pino log level      |
 

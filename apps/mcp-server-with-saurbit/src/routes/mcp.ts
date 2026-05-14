@@ -151,6 +151,7 @@ export const mcpPostRoute = applyModifiers(
 
       log.debug(
         {
+          app: request.auth.credentials.app,
           user: request.auth.credentials.user,
           scope: request.auth.credentials.scope,
         },

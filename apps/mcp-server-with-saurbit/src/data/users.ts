@@ -14,6 +14,12 @@ export const VALID_CLIENTS: Client[] = [
     allowed_scopes: ["openid", "profile", "email", "offline_access", "mcp:tools"],
     internal: false,
   },
+  {
+    client_id: "machine-client",
+    client_secret: "machine",
+    allowed_scopes: ["mcp:tools"],
+    internal: true,
+  },
 ];
 
 export interface User {
