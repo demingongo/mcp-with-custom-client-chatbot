@@ -2,6 +2,7 @@ import { OIDCAuthorizationCodeFlowBuilder } from "@saurbit/oauth2";
 import { REGISTERED_USERS, VALID_CLIENTS } from "../data/users";
 import { log } from "../services/log-service";
 import { jwksAuthority } from "./jwks";
+import Boom from "@hapi/boom";
 
 const codeStorage: Record<
   string,
@@ -12,6 +13,17 @@ const codeStorage: Record<
     expiresAt: number;
     codeChallenge?: string;
     nonce?: string;
+  }
+> = {};
+
+// in-memory refresh token storage, mapping refresh tokens to client, user, scope, and expiration
+const refreshTokenStorage: Record<
+  string,
+  {
+    clientId: string;
+    userId: string;
+    scope: string[];
+    expiresAt: number;
   }
 > = {};
 
@@ -127,7 +139,63 @@ export const flow = new OIDCAuthorizationCodeFlowBuilder({
           userId: codeData.userId,
           username: user.username,
           userEmail: user.email,
+          userFullName: user.fullName,
           nonce: codeData.nonce,
+        },
+      };
+    }
+
+    // handle the refresh token grant type
+    if (
+      tokenRequest.grantType === "refresh_token" &&
+      tokenRequest.clientId === client.client_id
+    ) {
+      const refreshTokenData = refreshTokenStorage[tokenRequest.refreshToken];
+
+      const createBoomError = (errorCode: string, errorDescription: string) => {
+        const errorResponse = Boom.badRequest(errorCode);
+        errorResponse.output.payload.error = errorCode;
+        errorResponse.output.payload.error_description = errorDescription;
+        return errorResponse;
+      }
+
+      // validate the refresh token and its association with the client
+      if (!refreshTokenData)
+        throw createBoomError("invalid_grant", "Invalid refresh token");
+
+      if (refreshTokenData.clientId !== tokenRequest.clientId)
+        throw createBoomError("invalid_grant", "Invalid client for refresh token");
+
+      // for security, remove the used refresh token to prevent reuse (rotate on each use)
+      delete refreshTokenStorage[tokenRequest.refreshToken];
+
+      // check if the refresh token has expired
+      if (refreshTokenData.expiresAt < Date.now()) {
+        throw createBoomError("invalid_grant", "Refresh token has expired");
+      }
+
+      const user = REGISTERED_USERS.find(
+        (u) => u.id === refreshTokenData.userId
+      );
+      if (!user) return undefined;
+
+      // narrow the scope if the client requests a subset
+      const requestedScope = Array.isArray(tokenRequest.scope) ? tokenRequest.scope : [];
+      const accessScope = requestedScope.length
+        ? refreshTokenData.scope.filter((s) => requestedScope.includes(s))
+        : refreshTokenData.scope;
+
+      return {
+        id: client.client_id,
+        grants: client.meta && "grant_types" in client.meta ? (client.meta.grant_types as string[]) : ["authorization_code"],
+        redirectUris: client.meta && "redirect_uris" in client.meta ? (client.meta.redirect_uris as string[]) : [],
+        scopes: client.allowed_scopes,
+        metadata: {
+          accessScope,
+          userId: refreshTokenData.userId,
+          username: user.username,
+          userEmail: user.email,
+          userFullName: user.fullName,
         },
       };
     }
@@ -167,10 +235,84 @@ export const flow = new OIDCAuthorizationCodeFlowBuilder({
       ...registeredClaims,
     });
 
+    // generate the refresh token if the "offline_access" scope was requested,
+    // and store it in the refresh token storage with an expiration time
+    const refreshToken = (() => {
+      if (accessScope.includes("offline_access")) {
+        return crypto.randomUUID();
+      }
+      return undefined;
+    })();
+
+    if (refreshToken) {
+      refreshTokenStorage[refreshToken] = {
+        clientId: grantContext.client.id,
+        userId: `${grantContext.client.metadata?.userId}`,
+        scope: accessScope,
+        expiresAt: Date.now() + 30 * 24 * 3600 * 1000, // 30 days
+      };
+    }
+
     return {
       accessToken,
       scope: accessScope,
       idToken,
+      refreshToken,
+    };
+  })
+  .generateAccessTokenFromRefreshToken(async (grantContext) => {
+    const accessScope = Array.isArray(grantContext.client.metadata?.accessScope)
+      ? grantContext.client.metadata.accessScope
+      : [];
+
+    const registeredClaims = {
+      exp: Math.floor(Date.now() / 1000) + grantContext.accessTokenLifetime,
+      iat: Math.floor(Date.now() / 1000),
+      nbf: Math.floor(Date.now() / 1000),
+      iss: grantContext.origin,
+      aud: grantContext.client.id,
+      jti: crypto.randomUUID(),
+      sub: `${grantContext.client.metadata?.userId}`,
+    };
+
+    const { token: accessToken } = await jwksAuthority.sign({
+      scope: accessScope.join(" "),
+      ...registeredClaims,
+    });
+
+    const { token: idToken } = await jwksAuthority.sign({
+      username: `${grantContext.client.metadata?.username}`,
+      name: accessScope.includes("profile")
+        ? `${grantContext.client.metadata?.userFullName}`
+        : undefined,
+      email: accessScope.includes("email")
+        ? `${grantContext.client.metadata?.userEmail}`
+        : undefined,
+      ...registeredClaims,
+    });
+
+    // rotate: issue a new refresh token to replace the one consumed in getClient
+    const refreshToken = (() => {
+      if (accessScope.includes("offline_access")) {
+        return crypto.randomUUID();
+      }
+      return undefined;
+    })();
+
+    if (refreshToken) {
+      refreshTokenStorage[refreshToken] = {
+        clientId: grantContext.client.id,
+        userId: `${grantContext.client.metadata?.userId}`,
+        scope: accessScope,
+        expiresAt: Date.now() + 30 * 24 * 3600 * 1000, // 30 days
+      };
+    }
+
+    return {
+      accessToken,
+      scope: accessScope,
+      idToken,
+      refreshToken,
     };
   })
   .verifyToken(async (_req, { token }) => {

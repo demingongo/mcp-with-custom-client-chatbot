@@ -21,8 +21,9 @@ export interface User {
   username: string;
   password: string;
   email: string;
+  fullName: string;
 }
 
 export const REGISTERED_USERS: User[] = [
-  { id: "user-1234", username: "user", password: "crossterm", email: "user@email.com" },
+  { id: "user-1234", username: "user", password: "crossterm", email: "user@email.com", fullName: "User FullName" },
 ];

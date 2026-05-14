@@ -135,7 +135,7 @@ export const oauthRegistrationRoute = applyModifiers(
       const payload = request.payload;
       const newClient: Client = {
         client_id: `client-${Date.now()}`,
-        allowed_scopes: payload.scope ? payload.scope.split(/\s+/) : [],
+        allowed_scopes: payload.scope ? payload.scope.split(/\s+/) : ["openid", "offline_access", "mcp:tools"], // default scopes if not provided
         internal: false,
         meta: {
           ...payload,
