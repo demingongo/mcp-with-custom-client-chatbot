@@ -14,7 +14,7 @@ async function loadConfig() {
     const res = await fetch(`${BACKEND}/api/chat/config`);
     const cfg = await res.json();
     subtitle.textContent = `Model: ${cfg.ollama.model} · MCP: ${cfg.mcp.baseUrl}`;
-  } catch {
+  } catch (_err) {
     subtitle.textContent = "Could not load config";
   }
 }
