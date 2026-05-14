@@ -27,8 +27,8 @@ export const chatRoute = withSchema({
   payload: type({
     messages: type(
       type({
-        role: "'system' | 'user' | 'assistant' | 'tool'",
-        content: "string"
+        role: type("'system' | 'user' | 'assistant' | 'tool'", "@", { description: "The role of the message author" }),
+        content: type("string", "@", { description: "The text content of the message" }),
       }).array().atLeastLength(1)
     ),
   }),
