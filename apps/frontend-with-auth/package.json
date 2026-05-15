@@ -1,0 +1,20 @@
+{
+  "name": "frontend-with-auth",
+  "version": "1.0.0",
+  "description": "Frontend for MCP client chatbot with OAuth2 authorization code flow",
+  "private": true,
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "build": "tsc --noEmit && tsup src --format esm --outDir dist --clean --metafile --sourcemap",
+    "dev": "tsx watch src/index.ts",
+    "lint": "eslint .",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "express": "^5.2.1"
+  },
+  "devDependencies": {
+    "@types/express": "5.0.6"
+  }
+}
