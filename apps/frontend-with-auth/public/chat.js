@@ -198,7 +198,7 @@ form.addEventListener("submit", async (e) => {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "X-User-Id": userId,
+        "Authorization": `Bearer ${userId}`,
       },
       body: JSON.stringify({ messages: history }),
     });

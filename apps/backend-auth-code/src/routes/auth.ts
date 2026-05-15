@@ -13,7 +13,7 @@ const MCP_ENDPOINT = new URL("/mcp", MCP_BASE_URL);
  * POST /api/auth/session
  *
  * Creates a new anonymous session and returns a session ID.
- * The frontend stores this ID and passes it as the X-User-Id header on all
+ * The frontend stores this ID and passes it as the Bearer token in the Authorization header on all
  * subsequent requests. It is also used as the userId parameter in /api/auth/login
  * to bind the OAuth tokens to this session.
  */
@@ -23,8 +23,13 @@ export const createSessionRoute: KaapiServerRoute = {
     handler: () => ({ ok: true, userId: randomUUID() }),
     options: {
         description: "Create a new session",
-        notes: "Returns a session ID (userId) the frontend must store and include in every request as the X-User-Id header.",
+        notes: "Returns a session ID (userId) the frontend must store and include in every request as the Authorization header.",
         tags: ["auth"],
+        plugins: {
+            kaapi: {
+                docs: false
+            }
+        }
     },
 };
 
@@ -74,6 +79,11 @@ export const loginRoute: KaapiServerRoute = {
         description: "Initiate OAuth authorization code login",
         notes: "Returns authorizationUrl to redirect the user's browser to. Returns alreadyAuthenticated: true if the user already has valid tokens.",
         tags: ["auth"],
+        plugins: {
+            kaapi: {
+                docs: false
+            }
+        }
     },
 };
 
@@ -110,5 +120,10 @@ export const callbackRoute: KaapiServerRoute = {
         description: "OAuth authorization code callback",
         notes: "Receives the authorization code from the OAuth server and exchanges it for tokens. Redirects the browser to the frontend on success.",
         tags: ["auth"],
+        plugins: {
+            kaapi: {
+                docs: false
+            }
+        }
     },
 };

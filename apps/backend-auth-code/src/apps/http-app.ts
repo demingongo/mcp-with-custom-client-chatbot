@@ -12,6 +12,7 @@ import { Kaapi } from "@kaapi/kaapi";
 import { validatorArk } from "@kaapi/validator-arktype";
 import hapiScalar from "hapi-scalar";
 import { log } from "../services/log-service";
+import { apiKeyAuthDesign } from "../security/api-key";
 
 //#region Create and configure Kaapi app
 
@@ -27,11 +28,7 @@ export const app = new Kaapi({
 
   // CORS configuration for all routes
   routes: {
-    cors: {
-      origin: ["*"], // allow all origins - adjust as needed for production
-      additionalHeaders: ["X-User-Id"], // allow custom header for user ID
-      preflightStatusCode: 204, // successful response for preflight requests
-    },
+    cors: true,
   },
 
   // DocsConfig
@@ -67,6 +64,8 @@ export const app = new Kaapi({
 await app.extend([
   // to validate request with Arktype schemas
   validatorArk,
+  // to handle API key authentication
+  apiKeyAuthDesign,
   // to serve Scalar UI for API docs
   {
     async integrate(t) {

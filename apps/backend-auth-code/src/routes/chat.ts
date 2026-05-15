@@ -6,19 +6,20 @@ import { randomBytes } from "node:crypto";
 import { withSchema } from "@kaapi/validator-arktype";
 import { type } from 'arktype';
 import Boom from "@hapi/boom";
+import { ApiKeyAuthCredentials, apiKeyAuthDesign } from "../security/api-key";
 
 export const chatConfigRoute: KaapiServerRoute = {
   method: "get",
   path: "/api/chat/config",
-  handler: () => ({
-    ollama: { baseUrl: OLLAMA_BASE_URL, model: OLLAMA_MODEL },
-    mcp: { baseUrl: MCP_BASE_URL },
-  }),
   options: {
     description: "Chat configuration endpoint",
     notes: "Returns the configuration for the chat system, including the Ollama model and MCP base URLs.",
     tags: ["chat"],
   },
+  handler: () => ({
+    ollama: { baseUrl: OLLAMA_BASE_URL, model: OLLAMA_MODEL },
+    mcp: { baseUrl: MCP_BASE_URL },
+  }),
 };
 
 const MAX_STEPS = 5;
@@ -38,9 +39,20 @@ export const chatRoute = withSchema({
     }
     return err;
   },
-}).route({
+}).route<{
+  AuthCredentialsExtra: ApiKeyAuthCredentials;
+}>({
   method: "post",
   path: "/api/chat",
+  options: {
+    auth: {
+      strategy: apiKeyAuthDesign.getStrategyName(),
+      mode: "required",
+    },
+    description: "Chat endpoint",
+    notes: "Accepts a conversation history and returns a reply. The server will use the MCP client to execute any tool calls requested by the LLM until it produces a final answer or reaches the max number of steps.",
+    tags: ["chat"],
+  },
   handler: async (request, h) => {
     const reqId = randomBytes(4).toString("hex");
     const log = baseLog.child({ tag: `chat:${reqId}` });
@@ -49,10 +61,7 @@ export const chatRoute = withSchema({
 
     let reply: string | undefined;
 
-    const userId = (request.headers as Record<string, string>)["x-user-id"];
-    if (!userId) {
-      return h.response({ ok: false, error: "X-User-Id header is required" }).code(400);
-    }
+    const userId = request.auth.credentials.user.token;
 
     const messages = request.payload.messages;
 
@@ -121,9 +130,4 @@ export const chatRoute = withSchema({
       return h.response({ ok: false, error: message, trace }).code(500);
     }
   },
-  options: {
-    description: "Chat endpoint",
-    notes: "Accepts a conversation history and returns a reply. The server will use the MCP client to execute any tool calls requested by the LLM until it produces a final answer or reaches the max number of steps.",
-    tags: ["chat"],
-  }
 });
