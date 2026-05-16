@@ -291,7 +291,7 @@ form.addEventListener("submit", async (e) => {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${userId}`,
+        Authorization: `Bearer ${userId}`,
       },
       body: JSON.stringify({ messages: history }),
     });
@@ -318,9 +318,7 @@ form.addEventListener("submit", async (e) => {
     }
 
     // Extract which MCP tools the model invoked from the execution trace.
-    const tools = (data.trace ?? [])
-      .filter((t) => t.step.startsWith("tool_"))
-      .map((t) => t.step.replace("tool_", ""));
+    const tools = (data.trace ?? []).filter((t) => t.step.startsWith("tool_")).map((t) => t.step.replace("tool_", ""));
 
     appendMessage("assistant", data.reply, { tools });
     history.push({ role: "assistant", content: data.reply });
@@ -342,4 +340,3 @@ appendMessage(
   "assistant",
   'Hi — ask me anything about ConnectAuz products. Try: "What does CA Fleet do?" or "Compare CA POS and CA Workforce."'
 );
-

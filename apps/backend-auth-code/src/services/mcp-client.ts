@@ -1,8 +1,8 @@
-import { Client, StreamableHTTPClientTransport, Tool, UnauthorizedError } from "@modelcontextprotocol/client";
-import { MCP_BASE_URL } from "../config/mcp";
 import { APP_NAME, APP_VERSION } from "../config/app";
+import { MCP_BASE_URL } from "../config/mcp";
 import { UserOAuthClientProvider } from "./oauth-provider";
 import { hasUserTokens } from "./user-token-store";
+import { Client, StreamableHTTPClientTransport, Tool, UnauthorizedError } from "@modelcontextprotocol/client";
 
 export class LoginRequiredError extends Error {
   constructor() {
@@ -27,10 +27,7 @@ export async function getMcpClientForUser(userId: string): Promise<{ client: Cli
 
   const provider = new UserOAuthClientProvider(userId);
   const client = new Client({ name: APP_NAME, version: APP_VERSION });
-  const transport = new StreamableHTTPClientTransport(
-    new URL("/mcp", MCP_BASE_URL),
-    { authProvider: provider },
-  );
+  const transport = new StreamableHTTPClientTransport(new URL("/mcp", MCP_BASE_URL), { authProvider: provider });
 
   try {
     await client.connect(transport);
@@ -49,4 +46,3 @@ export async function getMcpClientForUser(userId: string): Promise<{ client: Cli
 export function clearUserSession(userId: string): void {
   sessions.delete(userId);
 }
-

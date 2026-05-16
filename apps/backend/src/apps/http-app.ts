@@ -41,7 +41,7 @@ export const app = new Kaapi({
     host: {
       url: EXTERNAL_URI,
       description: APP_DESCRIPTION,
-      variables: {}
+      variables: {},
     },
 
     // (OpenAPI: register some schemas in components section)
@@ -83,4 +83,3 @@ await app.extend([
 ]);
 
 //#endregion
-

@@ -1,12 +1,9 @@
 import { app } from "./apps/http-app";
-import { chatConfigRoute, chatRoute } from "./routes/chat";
 import { loginRoute, callbackRoute } from "./routes/auth";
+import { chatConfigRoute, chatRoute } from "./routes/chat";
 import { log } from "./services/log-service";
 
-app.route(loginRoute)
-    .route(callbackRoute)
-    .route(chatConfigRoute)
-    .route(chatRoute);
+app.route(loginRoute).route(callbackRoute).route(chatConfigRoute).route(chatRoute);
 
 // start the server
 await app.listen();

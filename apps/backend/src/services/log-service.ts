@@ -8,7 +8,7 @@ export const log = pino({
   transport:
     LOG_LEVEL === "debug"
       ? {
-        target: "pino-pretty",
-      }
+          target: "pino-pretty",
+        }
       : undefined!,
 });

@@ -1,5 +1,5 @@
-import { applyModifiers, groupResponses, MediaTypeModifier, ResponseDocsModifier } from "@kaapi/kaapi";
 import { OIDC_ISSUER_URI } from "../config/app";
+import { applyModifiers, groupResponses, MediaTypeModifier, ResponseDocsModifier } from "@kaapi/kaapi";
 
 export const oauthProtectedResourceRoute = applyModifiers(
   {

@@ -8,12 +8,12 @@ import {
   SERVER_BIND_ADDRESS,
 } from "../config/app";
 import { LOG_LEVEL } from "../config/log";
+import { openidConnectDesign } from "../security/openid-connect";
 import { log } from "../services/log-service";
 import Boom from "@hapi/boom";
 import { Kaapi } from "@kaapi/kaapi";
 import { validatorZod } from "@kaapi/validator-zod";
 import hapiScalar from "hapi-scalar";
-import { openidConnectDesign } from "../security/openid-connect";
 
 //#region Create and configure Kaapi app
 
@@ -62,7 +62,7 @@ export const app = new Kaapi({
     host: {
       url: EXTERNAL_URI,
       description: APP_DESCRIPTION,
-      variables: {}
+      variables: {},
     },
 
     // (OpenAPI: register some schemas in components section)

@@ -140,11 +140,11 @@ body {
   white-space: normal;
 }
 
-.msg.assistant .body>*:first-child {
+.msg.assistant .body > *:first-child {
   margin-top: 0;
 }
 
-.msg.assistant .body>*:last-child {
+.msg.assistant .body > *:last-child {
   margin-bottom: 0;
 }
 
@@ -188,7 +188,7 @@ body {
   margin: 0.15em 0;
 }
 
-.msg.assistant .body li>p {
+.msg.assistant .body li > p {
   margin: 0.15em 0;
 }
 

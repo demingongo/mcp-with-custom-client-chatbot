@@ -7,25 +7,25 @@ let sharedClientInfo: OAuthClientInformation | undefined;
 const userTokens = new Map<string, OAuthTokens>();
 
 export function getSharedClientInfo(): OAuthClientInformation | undefined {
-    return sharedClientInfo;
+  return sharedClientInfo;
 }
 
 export function saveSharedClientInfo(info: OAuthClientInformation): void {
-    sharedClientInfo = info;
+  sharedClientInfo = info;
 }
 
 export function getUserTokens(userId: string): OAuthTokens | undefined {
-    return userTokens.get(userId);
+  return userTokens.get(userId);
 }
 
 export function saveUserTokens(userId: string, tokens: OAuthTokens): void {
-    userTokens.set(userId, tokens);
+  userTokens.set(userId, tokens);
 }
 
 export function hasUserTokens(userId: string): boolean {
-    return userTokens.has(userId);
+  return userTokens.has(userId);
 }
 
 export function clearUserTokens(userId: string): void {
-    userTokens.delete(userId);
+  userTokens.delete(userId);
 }

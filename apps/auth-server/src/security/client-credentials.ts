@@ -1,7 +1,7 @@
-import { OIDCClientCredentialsFlowBuilder } from "@saurbit/oauth2";
 import { VALID_CLIENTS } from "../data/users";
-import { jwksAuthority } from "./jwks";
 import { log } from "../services/log-service";
+import { jwksAuthority } from "./jwks";
+import { OIDCClientCredentialsFlowBuilder } from "@saurbit/oauth2";
 
 export const flow = new OIDCClientCredentialsFlowBuilder({
   securitySchemeName: "clientCredentials",
@@ -16,10 +16,8 @@ export const flow = new OIDCClientCredentialsFlowBuilder({
     claims_supported: ["sub", "aud", "iss", "exp", "iat", "nbf"],
   })
   .getClient((tokenRequest) => {
-    const client = VALID_CLIENTS.find(c =>
-      c.client_id === tokenRequest.clientId &&
-      c.client_secret === tokenRequest.clientSecret &&
-      c.internal
+    const client = VALID_CLIENTS.find(
+      (c) => c.client_id === tokenRequest.clientId && c.client_secret === tokenRequest.clientSecret && c.internal
     );
     if (!client) {
       return undefined;
@@ -52,15 +50,13 @@ export const flow = new OIDCClientCredentialsFlowBuilder({
     try {
       const payload = await jwksAuthority.verify(token);
       if (payload && typeof payload.scope === "string") {
-        const client = VALID_CLIENTS.find(
-          (c) => c.client_id === payload.sub
-        );
+        const client = VALID_CLIENTS.find((c) => c.client_id === payload.sub);
         if (client) {
           return {
             isValid: true,
             credentials: {
               app: {
-                id: client.client_id
+                id: client.client_id,
               },
               scope: payload.scope.split(" "),
             },
@@ -68,9 +64,12 @@ export const flow = new OIDCClientCredentialsFlowBuilder({
         }
       }
     } catch (error) {
-      log.error({
-        error: error instanceof Error ? { name: error.name, message: error.message } : error,
-      }, "Token verification error:");
+      log.error(
+        {
+          error: error instanceof Error ? { name: error.name, message: error.message } : error,
+        },
+        "Token verification error:"
+      );
     }
     return { isValid: false };
   })

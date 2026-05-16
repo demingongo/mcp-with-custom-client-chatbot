@@ -2,8 +2,7 @@ import { app } from "./apps/http-app";
 import { chatConfigRoute, chatRoute } from "./routes/chat";
 import { log } from "./services/log-service";
 
-app.route(chatConfigRoute)
-    .route(chatRoute);
+app.route(chatConfigRoute).route(chatRoute);
 
 // start the server
 await app.listen();

@@ -1,8 +1,6 @@
-import {
-  PORT,
-  SERVER_BIND_ADDRESS,
-} from "../config/app";
+import { PORT, SERVER_BIND_ADDRESS } from "../config/app";
 import { LOG_LEVEL } from "../config/log";
+import { multipleFlowsPlugin } from "../security/plugin";
 import { log } from "../services/log-service";
 import Boom from "@hapi/boom";
 import Vision from "@hapi/vision";
@@ -10,7 +8,6 @@ import { Kaapi } from "@kaapi/kaapi";
 import { validatorZod } from "@kaapi/validator-zod";
 import path from "path";
 import Pug from "pug";
-import { multipleFlowsPlugin } from "../security/plugin";
 
 //#region Create and configure Kaapi app
 
@@ -35,7 +32,7 @@ export const app = new Kaapi({
 
   // DocsConfig
   docs: {
-    disabled: true
+    disabled: true,
   },
 });
 

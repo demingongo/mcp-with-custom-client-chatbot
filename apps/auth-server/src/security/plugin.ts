@@ -1,14 +1,18 @@
-
-import { multipleFlows } from "./multiple-flows";
-import { AccessDeniedError, OIDCMultipleFlows, UnauthorizedClientError, UnsupportedGrantTypeError } from "@saurbit/oauth2";
-import { flow as authCodeFlow } from "./authorization-code";
-import { AuthDesign, KaapiTools, Request as KaapiRequest, ReqRef, ReqRefDefaults } from "@kaapi/kaapi";
-import Boom from "@hapi/boom";
-import { jwksAuthority } from "./jwks";
-import { withSchema } from "@kaapi/validator-zod";
-import { z } from "zod";
-import { OAuth2Util, SecuritySchemeObject } from '@novice1/api-doc-generator';
 import { log } from "../services/log-service";
+import { flow as authCodeFlow } from "./authorization-code";
+import { jwksAuthority } from "./jwks";
+import { multipleFlows } from "./multiple-flows";
+import Boom from "@hapi/boom";
+import { AuthDesign, KaapiTools, Request as KaapiRequest, ReqRef, ReqRefDefaults } from "@kaapi/kaapi";
+import { withSchema } from "@kaapi/validator-zod";
+import { OAuth2Util, SecuritySchemeObject } from "@novice1/api-doc-generator";
+import {
+  AccessDeniedError,
+  OIDCMultipleFlows,
+  UnauthorizedClientError,
+  UnsupportedGrantTypeError,
+} from "@saurbit/oauth2";
+import { z } from "zod";
 
 //#region Utility function to convert KaapiRequest to Web Standard Request
 
@@ -33,9 +37,9 @@ export function createWebStandardRequest<Refs extends ReqRef = ReqRefDefaults>(r
   };
 
   // Attach the body if it is a mutation request
-  if (['POST', 'PUT', 'PATCH'].includes(requestOptions.method)) {
+  if (["POST", "PUT", "PATCH"].includes(requestOptions.method)) {
     // Check if the content-type matches URL-encoded form data
-    const isUrlEncoded = request.headers['content-type']?.includes('application/x-www-form-urlencoded');
+    const isUrlEncoded = request.headers["content-type"]?.includes("application/x-www-form-urlencoded");
 
     if (isUrlEncoded && request.payload) {
       // Convert Hapi's parsed key-value payload object into a standard URL search string
@@ -48,12 +52,11 @@ export function createWebStandardRequest<Refs extends ReqRef = ReqRefDefaults>(r
       requestOptions.body = searchParams.toString();
 
       // Explicitly set the proper Web standard header value
-      requestOptions.headers.set('content-type', 'application/x-www-form-urlencoded');
+      requestOptions.headers.set("content-type", "application/x-www-form-urlencoded");
     } else {
       // If parsed JSON/object, stringify it; if buffer/stream, pass directly
-      requestOptions.body = request.payload && typeof request.payload === 'object'
-        ? JSON.stringify(request.payload)
-        : request.payload;
+      requestOptions.body =
+        request.payload && typeof request.payload === "object" ? JSON.stringify(request.payload) : request.payload;
     }
   }
 
@@ -66,11 +69,11 @@ export function createWebStandardRequest<Refs extends ReqRef = ReqRefDefaults>(r
 //#region Custom AuthDesign for Saurbit OAuth2 multiple flows integration with Kaapi
 
 class CustomAuthUtil extends OAuth2Util {
-  protected oidcMultipleFlows: OIDCMultipleFlows
+  protected oidcMultipleFlows: OIDCMultipleFlows;
 
   constructor(oidcMultipleFlows: OIDCMultipleFlows) {
     super(oidcMultipleFlows.getSecuritySchemeName());
-    this.oidcMultipleFlows = oidcMultipleFlows
+    this.oidcMultipleFlows = oidcMultipleFlows;
   }
 
   toOpenAPI(): Record<string, SecuritySchemeObject> {
@@ -90,7 +93,7 @@ export class CustomAuthDesign extends AuthDesign {
   }
 
   getStrategyName() {
-    return multipleFlows.getSecuritySchemeName()
+    return multipleFlows.getSecuritySchemeName();
   }
 
   async integrateStrategy(t: KaapiTools) {
@@ -104,17 +107,14 @@ export class CustomAuthDesign extends AuthDesign {
             if (result.success) {
               return h.authenticated({ credentials: result.credentials });
             }
-            return h.unauthenticated(
-              Boom.unauthorized(result.error.message, "Bearer"),
-              {
-                credentials: {}
-              }
-            );
+            return h.unauthenticated(Boom.unauthorized(result.error.message, "Bearer"), {
+              credentials: {},
+            });
           } catch (err) {
             return Boom.internal(err instanceof Error ? err : `${err}`);
           }
-        }
-      }
+        },
+      };
     });
     t.strategy(this.getStrategyName(), this.getStrategyName());
   }
@@ -125,9 +125,7 @@ export class CustomAuthDesign extends AuthDesign {
     if (securityScheme instanceof OAuth2Util && !securityScheme.getHost() && t.postman?.getHost().length) {
       securityScheme.setHost(t.postman.getHostValue());
     }
-    t.openapi
-      ?.addSecuritySchemeAliases(securityScheme)
-      .setDefaultSecurity(securityScheme);
+    t.openapi?.addSecuritySchemeAliases(securityScheme).setDefaultSecurity(securityScheme);
     t.postman?.setDefaultSecurity(securityScheme);
 
     // Register the discovery endpoint for the multiple flows
@@ -137,9 +135,9 @@ export class CustomAuthDesign extends AuthDesign {
       options: {
         plugins: {
           kaapi: {
-            docs: false
-          }
-        }
+            docs: false,
+          },
+        },
       },
       handler: async (request) => multipleFlows.getDiscoveryConfiguration(createWebStandardRequest(request)),
     });
@@ -151,9 +149,9 @@ export class CustomAuthDesign extends AuthDesign {
       options: {
         plugins: {
           kaapi: {
-            docs: false
-          }
-        }
+            docs: false,
+          },
+        },
       },
       handler: async () => await jwksAuthority.getJwksEndpointResponse(),
     });
@@ -165,9 +163,9 @@ export class CustomAuthDesign extends AuthDesign {
       options: {
         plugins: {
           kaapi: {
-            docs: false
-          }
-        }
+            docs: false,
+          },
+        },
       },
       handler: async (request, h) => {
         const result = await authCodeFlow.initiateAuthorization(createWebStandardRequest(request));
@@ -175,72 +173,79 @@ export class CustomAuthDesign extends AuthDesign {
           return h.view("login", { errorMessage: null }).code(200);
         }
         return h.response({ error: "invalid_request" }).code(400);
-      }
+      },
     });
 
     // Register authorization page handler for authorization code flow
-    t.route(withSchema({
-      payload: z.object({
-        username: z.string(),
-        password: z.string(),
-      }),
-      failAction: async (_, h) => {
-        return h.view("login", { errorMessage: "Bad request" }).code(400).takeover();
-      }
-    }).route({
-      method: "POST",
-      path: authCodeFlow.getAuthorizationEndpoint(),
-      options: {
-        plugins: {
-          kaapi: {
-            docs: false
-          }
-        }
-      },
-      handler: async (request, h) => {
-        try {
-          const result = await authCodeFlow.processAuthorization(createWebStandardRequest(request), request.payload);
+    t.route(
+      withSchema({
+        payload: z.object({
+          username: z.string(),
+          password: z.string(),
+        }),
+        failAction: async (_, h) => {
+          return h.view("login", { errorMessage: "Bad request" }).code(400).takeover();
+        },
+      }).route({
+        method: "POST",
+        path: authCodeFlow.getAuthorizationEndpoint(),
+        options: {
+          plugins: {
+            kaapi: {
+              docs: false,
+            },
+          },
+        },
+        handler: async (request, h) => {
+          try {
+            const result = await authCodeFlow.processAuthorization(createWebStandardRequest(request), request.payload);
 
-          if (result.type === "error") {
-            const error = result.error;
-            if (result.redirectable) {
-              const qs = [
-                `error=${encodeURIComponent(error instanceof AccessDeniedError ? error.errorCode : "invalid_request")}`,
-                `error_description=${encodeURIComponent(
-                  error instanceof AccessDeniedError ? error.message : "Invalid request"
-                )}`,
-                result.state ? `state=${encodeURIComponent(result.state)}` : null,
-              ]
-                .filter(Boolean)
-                .join("&");
-              return h.redirect(`${result.redirectUri}?${qs}`);
+            if (result.type === "error") {
+              const error = result.error;
+              if (result.redirectable) {
+                const qs = [
+                  `error=${encodeURIComponent(error instanceof AccessDeniedError ? error.errorCode : "invalid_request")}`,
+                  `error_description=${encodeURIComponent(
+                    error instanceof AccessDeniedError ? error.message : "Invalid request"
+                  )}`,
+                  result.state ? `state=${encodeURIComponent(result.state)}` : null,
+                ]
+                  .filter(Boolean)
+                  .join("&");
+                return h.redirect(`${result.redirectUri}?${qs}`);
+              }
+              return h.view("login", { errorMessage: error.message }).code(400);
             }
-            return h.view("login", { errorMessage: error.message }).code(400);
-          }
 
-          if (result.type === "code") {
-            const {
-              code,
-              context: { state, redirectUri },
-            } = result.authorizationCodeResponse;
-            const searchParams = new URLSearchParams();
-            searchParams.set("code", code);
-            if (state) searchParams.set("state", state);
-            return h.redirect(`${redirectUri}?${searchParams.toString()}`);
-          }
+            if (result.type === "code") {
+              const {
+                code,
+                context: { state, redirectUri },
+              } = result.authorizationCodeResponse;
+              const searchParams = new URLSearchParams();
+              searchParams.set("code", code);
+              if (state) searchParams.set("state", state);
+              return h.redirect(`${redirectUri}?${searchParams.toString()}`);
+            }
 
-          if (result.type === "unauthenticated") {
-            return h.view("login", { errorMessage: result.message || "Authentication failed. Please try again." }).code(400);
+            if (result.type === "unauthenticated") {
+              return h
+                .view("login", { errorMessage: result.message || "Authentication failed. Please try again." })
+                .code(400);
+            }
+          } catch (error) {
+            log.error(
+              {
+                error: error instanceof Error ? { name: error.name, message: error.message } : error,
+              },
+              "Unexpected error at authorization endpoint:"
+            );
+            return h.view("login", { errorMessage: "An unexpected error occurred. Please try again later." }).code(500);
           }
-        } catch (error) {
-          log.error({
-            error: error instanceof Error ? { name: error.name, message: error.message } : error,
-          }, "Unexpected error at authorization endpoint:");
-          return h.view("login", { errorMessage: "An unexpected error occurred. Please try again later." }).code(500);
-        }
-        return h.view("login", { errorMessage: "Could not process the request. Please try again." }).code(400);
-      }
-    }));
+          return h.view("login", { errorMessage: "Could not process the request. Please try again." }).code(400);
+        },
+      })
+    );
 
     // Register the token endpoint for the multiple flows
     t.route({
@@ -249,9 +254,9 @@ export class CustomAuthDesign extends AuthDesign {
       options: {
         plugins: {
           kaapi: {
-            docs: false
-          }
-        }
+            docs: false,
+          },
+        },
       },
       handler: async (request, h) => {
         const result = await multipleFlows.token(createWebStandardRequest(request));
@@ -259,17 +264,16 @@ export class CustomAuthDesign extends AuthDesign {
           return result.tokenResponse;
         }
         const error = result.error;
-        log.error({ error }, "Error")
+        log.error({ error }, "Error");
         if (error instanceof UnsupportedGrantTypeError || error instanceof UnauthorizedClientError) {
           return h.response({ error: error.errorCode, errorDescription: error.message }).code(400);
         }
         return h.response({ error: "invalid_request" }).code(400);
-      }
+      },
     });
-
   }
 }
 
 //#endregion
 
-export const multipleFlowsPlugin = new CustomAuthDesign()
+export const multipleFlowsPlugin = new CustomAuthDesign();

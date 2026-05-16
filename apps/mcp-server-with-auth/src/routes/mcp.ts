@@ -1,4 +1,5 @@
 //import { multipleFlowsPlugin } from "../security/plugin";
+import { openidConnectDesign } from "../security/openid-connect";
 import { log } from "../services/log-service";
 import { handleMcpRequest, sessions } from "../services/mcp/handler";
 import { JsonRpcErrorResponse, JsonRpcResponse } from "../types";
@@ -8,7 +9,6 @@ import { withSchema } from "@kaapi/validator-zod";
 import { randomUUID } from "node:crypto";
 import { PassThrough } from "node:stream";
 import { z } from "zod";
-import { openidConnectDesign } from "../security/openid-connect";
 
 // ---------------------------------------------------------------------------
 // Helpers

@@ -1,12 +1,12 @@
-import { KaapiServerRoute } from "@kaapi/kaapi";
 import { MCP_BASE_URL, OLLAMA_BASE_URL, OLLAMA_MODEL } from "../config/mcp";
-import { getMcpClientForUser, LoginRequiredError } from "../services/mcp-client";
-import { log as baseLog } from "../services/log-service";
-import { randomBytes } from "node:crypto";
-import { withSchema } from "@kaapi/validator-arktype";
-import { type } from 'arktype';
-import Boom from "@hapi/boom";
 import { ApiKeyAuthCredentials, apiKeyAuthDesign } from "../security/api-key";
+import { log as baseLog } from "../services/log-service";
+import { getMcpClientForUser, LoginRequiredError } from "../services/mcp-client";
+import Boom from "@hapi/boom";
+import { KaapiServerRoute } from "@kaapi/kaapi";
+import { withSchema } from "@kaapi/validator-arktype";
+import { type } from "arktype";
+import { randomBytes } from "node:crypto";
 
 export const chatConfigRoute: KaapiServerRoute = {
   method: "get",
@@ -30,7 +30,9 @@ export const chatRoute = withSchema({
       type({
         role: type("'system' | 'user' | 'assistant' | 'tool'", "@", { description: "The role of the message author" }),
         content: type("string", "@", { description: "The text content of the message" }),
-      }).array().atLeastLength(1)
+      })
+        .array()
+        .atLeastLength(1)
     ),
   }),
   failAction: async (_, _h, err) => {
@@ -50,7 +52,8 @@ export const chatRoute = withSchema({
       mode: "required",
     },
     description: "Chat endpoint",
-    notes: "Accepts a conversation history and returns a reply. The server will use the MCP client to execute any tool calls requested by the LLM until it produces a final answer or reaches the max number of steps.",
+    notes:
+      "Accepts a conversation history and returns a reply. The server will use the MCP client to execute any tool calls requested by the LLM until it produces a final answer or reaches the max number of steps.",
     tags: ["chat"],
   },
   handler: async (request, h) => {
@@ -69,7 +72,7 @@ export const chatRoute = withSchema({
       const { client, tools } = await getMcpClientForUser(userId);
 
       // Convert MCP tool schemas to Ollama tool format
-      const ollamaTools = tools.map(t => ({
+      const ollamaTools = tools.map((t) => ({
         type: "function",
         function: {
           name: t.name,
@@ -87,7 +90,7 @@ export const chatRoute = withSchema({
           body: JSON.stringify({ model: OLLAMA_MODEL, messages, tools: ollamaTools, stream: false }),
         });
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const data = await res.json() as any;
+        const data = (await res.json()) as any;
         const message = data.message;
         trace.push({ step: `model_reply_${step}`, detail: message.content });
 
@@ -106,7 +109,8 @@ export const chatRoute = withSchema({
           });
           messages.push({ role: "tool", content: JSON.stringify(result) });
           trace.push({
-            step: `tool_${tc.function.name}`, detail: JSON.stringify(result)
+            step: `tool_${tc.function.name}`,
+            detail: JSON.stringify(result),
           });
         }
       }
@@ -116,7 +120,7 @@ export const chatRoute = withSchema({
         return {
           ok: false,
           error: "Reached max tool-call iterations without a final answer.",
-          trace
+          trace,
         };
       }
 

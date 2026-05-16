@@ -1,8 +1,8 @@
-import { OIDCAuthorizationCodeFlowBuilder } from "@saurbit/oauth2";
 import { REGISTERED_USERS, VALID_CLIENTS } from "../data/users";
 import { log } from "../services/log-service";
 import { jwksAuthority } from "./jwks";
 import Boom from "@hapi/boom";
+import { OIDCAuthorizationCodeFlowBuilder } from "@saurbit/oauth2";
 
 const codeStorage: Record<
   string,
@@ -47,7 +47,6 @@ export const flow = new OIDCAuthorizationCodeFlowBuilder({
     claims_supported: ["sub", "aud", "iss", "exp", "iat", "nbf", "name", "email", "username"],
   })
   .getClientForAuthentication((data) => {
-
     const client = VALID_CLIENTS.find((c) => c.client_id === data.clientId && !c.internal);
     if (!client) return undefined;
 
@@ -58,18 +57,16 @@ export const flow = new OIDCAuthorizationCodeFlowBuilder({
       : client.allowed_scopes;
     if (grantedScopes.length === 0) return undefined;
 
-
     return {
       id: client.client_id,
-      grants: client.meta && "grant_types" in client.meta ? (client.meta.grant_types as string[]) : ["authorization_code"],
+      grants:
+        client.meta && "grant_types" in client.meta ? (client.meta.grant_types as string[]) : ["authorization_code"],
       redirectUris: client.meta && "redirect_uris" in client.meta ? (client.meta.redirect_uris as string[]) : [],
       scopes: client.allowed_scopes,
     };
   })
   .getUserForAuthentication((_ctxt, parsedData) => {
-    const user = REGISTERED_USERS.find(
-      (u) => u.username === parsedData.username && u.password === parsedData.password
-    );
+    const user = REGISTERED_USERS.find((u) => u.username === parsedData.username && u.password === parsedData.password);
     if (!user) return undefined;
     return {
       type: "authenticated",
@@ -98,10 +95,7 @@ export const flow = new OIDCAuthorizationCodeFlowBuilder({
   .getClient(async (tokenRequest) => {
     const client = VALID_CLIENTS.find((c) => c.client_id === tokenRequest.clientId && !c.internal);
     if (!client) return undefined;
-    if (
-      tokenRequest.grantType === "authorization_code" &&
-      tokenRequest.code
-    ) {
+    if (tokenRequest.grantType === "authorization_code" && tokenRequest.code) {
       const codeData = codeStorage[tokenRequest.code];
       if (!codeData) return undefined;
       if (codeData.clientId !== tokenRequest.clientId) return undefined;
@@ -124,14 +118,13 @@ export const flow = new OIDCAuthorizationCodeFlowBuilder({
         return undefined;
       }
 
-      const user = REGISTERED_USERS.find(
-        (u) => u.id === codeData.userId
-      );
+      const user = REGISTERED_USERS.find((u) => u.id === codeData.userId);
       if (!user) return undefined;
 
       return {
         id: client.client_id,
-        grants: client.meta && "grant_types" in client.meta ? (client.meta.grant_types as string[]) : ["authorization_code"],
+        grants:
+          client.meta && "grant_types" in client.meta ? (client.meta.grant_types as string[]) : ["authorization_code"],
         redirectUris: client.meta && "redirect_uris" in client.meta ? (client.meta.redirect_uris as string[]) : [],
         scopes: client.allowed_scopes,
         metadata: {
@@ -146,10 +139,7 @@ export const flow = new OIDCAuthorizationCodeFlowBuilder({
     }
 
     // handle the refresh token grant type
-    if (
-      tokenRequest.grantType === "refresh_token" &&
-      tokenRequest.clientId === client.client_id
-    ) {
+    if (tokenRequest.grantType === "refresh_token" && tokenRequest.clientId === client.client_id) {
       const refreshTokenData = refreshTokenStorage[tokenRequest.refreshToken];
 
       const createBoomError = (errorCode: string, errorDescription: string) => {
@@ -157,11 +147,10 @@ export const flow = new OIDCAuthorizationCodeFlowBuilder({
         errorResponse.output.payload.error = errorCode;
         errorResponse.output.payload.error_description = errorDescription;
         return errorResponse;
-      }
+      };
 
       // validate the refresh token and its association with the client
-      if (!refreshTokenData)
-        throw createBoomError("invalid_grant", "Invalid refresh token");
+      if (!refreshTokenData) throw createBoomError("invalid_grant", "Invalid refresh token");
 
       if (refreshTokenData.clientId !== tokenRequest.clientId)
         throw createBoomError("invalid_grant", "Invalid client for refresh token");
@@ -174,9 +163,7 @@ export const flow = new OIDCAuthorizationCodeFlowBuilder({
         throw createBoomError("invalid_grant", "Refresh token has expired");
       }
 
-      const user = REGISTERED_USERS.find(
-        (u) => u.id === refreshTokenData.userId
-      );
+      const user = REGISTERED_USERS.find((u) => u.id === refreshTokenData.userId);
       if (!user) return undefined;
 
       // narrow the scope if the client requests a subset
@@ -187,7 +174,8 @@ export const flow = new OIDCAuthorizationCodeFlowBuilder({
 
       return {
         id: client.client_id,
-        grants: client.meta && "grant_types" in client.meta ? (client.meta.grant_types as string[]) : ["authorization_code"],
+        grants:
+          client.meta && "grant_types" in client.meta ? (client.meta.grant_types as string[]) : ["authorization_code"],
         redirectUris: client.meta && "redirect_uris" in client.meta ? (client.meta.redirect_uris as string[]) : [],
         scopes: client.allowed_scopes,
         metadata: {
@@ -223,15 +211,9 @@ export const flow = new OIDCAuthorizationCodeFlowBuilder({
 
     const { token: idToken } = await jwksAuthority.sign({
       username: `${grantContext.client.metadata?.username}`,
-      name: accessScope.includes("profile")
-        ? `${grantContext.client.metadata?.userFullName}`
-        : undefined,
-      email: accessScope.includes("email")
-        ? `${grantContext.client.metadata?.userEmail}`
-        : undefined,
-      nonce: grantContext.client.metadata?.nonce
-        ? `${grantContext.client.metadata?.nonce}`
-        : undefined,
+      name: accessScope.includes("profile") ? `${grantContext.client.metadata?.userFullName}` : undefined,
+      email: accessScope.includes("email") ? `${grantContext.client.metadata?.userEmail}` : undefined,
+      nonce: grantContext.client.metadata?.nonce ? `${grantContext.client.metadata?.nonce}` : undefined,
       ...registeredClaims,
     });
 
@@ -282,12 +264,8 @@ export const flow = new OIDCAuthorizationCodeFlowBuilder({
 
     const { token: idToken } = await jwksAuthority.sign({
       username: `${grantContext.client.metadata?.username}`,
-      name: accessScope.includes("profile")
-        ? `${grantContext.client.metadata?.userFullName}`
-        : undefined,
-      email: accessScope.includes("email")
-        ? `${grantContext.client.metadata?.userEmail}`
-        : undefined,
+      name: accessScope.includes("profile") ? `${grantContext.client.metadata?.userFullName}` : undefined,
+      email: accessScope.includes("email") ? `${grantContext.client.metadata?.userEmail}` : undefined,
       ...registeredClaims,
     });
 
@@ -319,9 +297,7 @@ export const flow = new OIDCAuthorizationCodeFlowBuilder({
     try {
       const payload = await jwksAuthority.verify(token);
       if (payload && typeof payload.scope === "string") {
-        const user = REGISTERED_USERS.find(
-          (u) => u.id === payload.sub
-        );
+        const user = REGISTERED_USERS.find((u) => u.id === payload.sub);
         if (user) {
           return {
             isValid: true,
@@ -337,9 +313,12 @@ export const flow = new OIDCAuthorizationCodeFlowBuilder({
         }
       }
     } catch (error) {
-      log.error({
-        error: error instanceof Error ? { name: error.name, message: error.message } : error,
-      }, "Token verification error:");
+      log.error(
+        {
+          error: error instanceof Error ? { name: error.name, message: error.message } : error,
+        },
+        "Token verification error:"
+      );
     }
     return { isValid: false };
   })

@@ -8,11 +8,11 @@ import {
   SERVER_BIND_ADDRESS,
 } from "../config/app";
 import { LOG_LEVEL } from "../config/log";
+import { apiKeyAuthDesign } from "../security/api-key";
+import { log } from "../services/log-service";
 import { Kaapi } from "@kaapi/kaapi";
 import { validatorArk } from "@kaapi/validator-arktype";
 import hapiScalar from "hapi-scalar";
-import { log } from "../services/log-service";
-import { apiKeyAuthDesign } from "../security/api-key";
 
 //#region Create and configure Kaapi app
 
@@ -43,7 +43,7 @@ export const app = new Kaapi({
     host: {
       url: EXTERNAL_URI,
       description: APP_DESCRIPTION,
-      variables: {}
+      variables: {},
     },
 
     // (OpenAPI: register some schemas in components section)
