@@ -11,39 +11,16 @@ import { registerSession, getSessionState, markSessionAuthenticated } from "../s
 const MCP_ENDPOINT = new URL("/mcp", MCP_BASE_URL);
 
 /**
- * POST /api/auth/session
+ * POST /api/auth/login
  *
- * Creates a new anonymous session and returns a session ID.
- * The frontend stores this ID and passes it as the Bearer token in the Authorization header on all
- * subsequent requests. It is also used as the userId parameter in /api/auth/login
- * to bind the OAuth tokens to this session.
- */
-export const createSessionRoute: KaapiServerRoute = {
-    method: "post",
-    path: "/api/auth/session",
-    handler: async () => {
-        const userId = randomUUID();
-        await registerSession(userId);
-        return { ok: true, userId };
-    },
-    options: {
-        description: "Create a new session",
-        notes: "Returns a session ID (userId) the frontend must store and include in every request as the Authorization header.",
-        tags: ["auth"],
-        plugins: {
-            kaapi: {
-                docs: false
-            }
-        }
-    },
-};
-
-/**
- * GET /api/auth/login?userId=<id>
+ * Initiates the OAuth authorization code flow.
+ * Handles both first-time visitors (no session yet) and returning users:
  *
- * Initiates the OAuth authorization code flow for a user.
- * Returns { authorizationUrl } — the frontend should redirect the user's browser there.
- * If the user already has valid tokens, returns { alreadyAuthenticated: true } instead.
+ *  - No Authorization header → creates a new session on the spot, then starts the
+ *    auth flow. Returns { userId, authorizationUrl } so the frontend can store the
+ *    session ID and redirect in a single round trip.
+ *  - Authorization: Bearer <sessionId> → validates the existing session and returns
+ *    { authorizationUrl } (pending) or { alreadyAuthenticated: true } (already done).
  *
  * Flow:
  *  1. auth() discovers the auth server (RFC 9728), handles Dynamic Client Registration
@@ -52,24 +29,30 @@ export const createSessionRoute: KaapiServerRoute = {
  *  3. We persist { userId, codeVerifier } keyed by `state` for the callback.
  */
 export const loginRoute: KaapiServerRoute = {
-    method: "get",
+    method: "post",
     path: "/api/auth/login",
     handler: async (request, h) => {
         try {
-            // Read the session ID from the Authorization header to avoid exposing it in
-            // server access logs or Referer headers (it becomes a valid Bearer token after auth).
             const authHeader = (request.headers as Record<string, string>)["authorization"] ?? "";
-            const userId = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : "";
-            if (!userId) {
-                return h.response({ ok: false, error: "Authorization: Bearer <sessionId> header is required" }).code(401);
-            }
+            const existingId = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : "";
 
-            const sessionState = await getSessionState(userId);
-            if (sessionState === undefined) {
-                return h.response({ ok: false, error: "Unknown session ID" }).code(403);
-            }
-            if (sessionState === "authenticated") {
-                return { ok: true, alreadyAuthenticated: true };
+            let userId: string;
+            let isNewSession = false;
+
+            if (!existingId) {
+                // No session yet — create one inline so the client only needs one round trip.
+                userId = randomUUID();
+                await registerSession(userId);
+                isNewSession = true;
+            } else {
+                userId = existingId;
+                const sessionState = await getSessionState(userId);
+                if (sessionState === undefined) {
+                    return h.response({ ok: false, error: "Unknown session ID" }).code(403);
+                }
+                if (sessionState === "authenticated") {
+                    return { ok: true, alreadyAuthenticated: true };
+                }
             }
 
             const provider = new UserOAuthClientProvider(userId);
@@ -77,7 +60,7 @@ export const loginRoute: KaapiServerRoute = {
 
             if (result === "AUTHORIZED") {
                 // Tokens already present from a previous flow — sync the session state.
-                await markSessionAuthenticated(userId);
+                markSessionAuthenticated(userId);
                 return { ok: true, alreadyAuthenticated: true };
             }
 
@@ -86,16 +69,21 @@ export const loginRoute: KaapiServerRoute = {
             }
 
             savePendingAuth(provider.storedState, userId, provider.storedCodeVerifier);
-            return { ok: true, authorizationUrl: provider.capturedAuthUrl.toString() };
+            return {
+                ok: true,
+                // Only include userId when we just created the session — the client already
+                // knows its own ID for subsequent requests.
+                ...(isNewSession && { userId }),
+                authorizationUrl: provider.capturedAuthUrl.toString(),
+            };
         } catch (err) {
             log.error({ err }, "Error in login route");
             return h.response({ ok: false, error: (err as Error).message }).code(500);
         }
-
     },
     options: {
         description: "Initiate OAuth authorization code login",
-        notes: "Returns authorizationUrl to redirect the user's browser to. Returns alreadyAuthenticated: true if the user already has valid tokens.",
+        notes: "Returns authorizationUrl to redirect the user's browser to. Returns alreadyAuthenticated: true if the user already has valid tokens. Returns userId when a new session was created.",
         tags: ["auth"],
         plugins: {
             kaapi: {

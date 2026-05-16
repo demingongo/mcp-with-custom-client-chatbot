@@ -1,10 +1,9 @@
 import { app } from "./apps/http-app";
 import { chatConfigRoute, chatRoute } from "./routes/chat";
-import { createSessionRoute, loginRoute, callbackRoute } from "./routes/auth";
+import { loginRoute, callbackRoute } from "./routes/auth";
 import { log } from "./services/log-service";
 
-app.route(createSessionRoute)
-    .route(loginRoute)
+app.route(loginRoute)
     .route(callbackRoute)
     .route(chatConfigRoute)
     .route(chatRoute);

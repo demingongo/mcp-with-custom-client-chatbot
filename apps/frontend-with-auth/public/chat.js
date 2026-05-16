@@ -78,35 +78,32 @@ function renderAuthBanner() {
 /**
  * Initiates the OAuth login flow when the user clicks "Log in".
  *
- * Steps:
- *  1. If no session exists yet, request one from the backend (POST /api/auth/session).
- *  2. Ask the backend for the authorization URL (GET /api/auth/login).
- *  3. If the backend says the session is already authenticated, update local state.
- *  4. Otherwise, redirect the browser to the AS authorization URL to start the OAuth dance.
+ * A single POST /api/auth/login handles everything:
+ *  - No session yet  → backend creates one and returns { userId, authorizationUrl }.
+ *  - Existing session, pending  → backend returns { authorizationUrl }.
+ *  - Existing session, authenticated → backend returns { alreadyAuthenticated: true }.
  */
 async function startLogin() {
   const btn = document.getElementById("login-btn");
   if (btn) btn.disabled = true;
 
   try {
-    // Session is created on demand — only when the user explicitly wants to log in,
-    // so we don't issue tokens for visitors who never authenticate.
-    if (!userId) {
-      const sessionRes = await fetch(`${BACKEND}/api/auth/session`, { method: "POST" });
-      const sessionData = await sessionRes.json();
-      userId = sessionData.userId;
-      localStorage.setItem(SESSION_KEY, userId);
-    }
-
-    // The session ID is sent in the Authorization header (not the URL) to keep it
-    // out of server access logs and Referer headers.
+    // Send the session ID if we have one; omit the header otherwise so the backend
+    // knows to create a fresh session. The ID is kept in the header (not the URL) to
+    // stay out of server access logs and Referer headers.
     const res = await fetch(`${BACKEND}/api/auth/login`, {
-      headers: { Authorization: `Bearer ${userId}` },
+      method: "POST",
+      headers: userId ? { Authorization: `Bearer ${userId}` } : {},
     });
     const data = await res.json();
 
+    if (data.userId) {
+      // Backend issued a new session ID — persist it for all subsequent requests.
+      userId = data.userId;
+      localStorage.setItem(SESSION_KEY, userId);
+    }
+
     if (data.alreadyAuthenticated) {
-      // Backend confirmed the session already has valid OAuth tokens.
       authenticated = true;
       localStorage.setItem(AUTH_KEY, "true");
       renderAuthBanner();
