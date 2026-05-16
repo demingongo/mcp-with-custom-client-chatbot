@@ -1,4 +1,4 @@
-import oidcAuthFlows from "../security/oidc-multiple-flows";
+//import { multipleFlowsPlugin } from "../security/plugin";
 import { log } from "../services/log-service";
 import { handleMcpRequest, sessions } from "../services/mcp/handler";
 import { JsonRpcErrorResponse, JsonRpcResponse } from "../types";
@@ -8,6 +8,7 @@ import { withSchema } from "@kaapi/validator-zod";
 import { randomUUID } from "node:crypto";
 import { PassThrough } from "node:stream";
 import { z } from "zod";
+import { openidConnectDesign } from "../security/openid-connect";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -103,45 +104,60 @@ export const mcpPostRoute = applyModifiers(
       const sessionId =
         typeof request.headers["mcp-session-id"] === "string" ? request.headers["mcp-session-id"] : null;
 
-      // Spec §2025-06-18 Transport §Protocol Version Header:
-      // Clients MUST send MCP-Protocol-Version on all requests after initialization.
-      // Absent header => assume 2025-03-26 => 400 Bad Request (because we no longer support this version).
-      // Invalid/unsupported version => 400 Bad Request.
       if (rpc.method !== "initialize") {
-        const clientVersion = request.headers["mcp-protocol-version"];
-        if (typeof clientVersion === "undefined") {
-          return h
-            .response({
-              jsonrpc: "2.0",
-              id: extractId(rpc),
-              error: { code: -32600, message: `Unsupported MCP-Protocol-Version: "${clientVersion}"` },
-            })
-            .code(400);
+        // Spec §2025-06-18 Transport §Protocol Version Header:
+        // Clients MUST send MCP-Protocol-Version on all requests after initialization.
+        // Absent header => assume 2025-03-26 => 400 Bad Request (because we no longer support this version).
+        // Invalid/unsupported version => 400 Bad Request.
+        {
+          const clientVersion = request.headers["mcp-protocol-version"];
+          if (typeof clientVersion === "undefined") {
+            return h
+              .response({
+                jsonrpc: "2.0",
+                id: extractId(rpc),
+                error: { code: -32600, message: `Unsupported MCP-Protocol-Version: "${clientVersion}"` },
+              })
+              .code(400);
+          }
         }
-      }
 
-      // All methods other than initialize require a valid existing session.
-      // Spec §Session Management:
-      //   - No header at all → 400 Bad Request (point 2)
-      //   - Header present but session expired/unknown → 404 Not Found (point 3)
-      if (rpc.method !== "initialize") {
-        if (!sessionId) {
-          return h
-            .response({
-              jsonrpc: "2.0",
-              id: extractId(rpc),
-              error: { code: -32600, message: "Missing Mcp-Session-Id header" },
-            })
-            .code(400);
+        // All methods other than initialize require a valid existing session.
+        // Spec §Session Management:
+        //   - No header at all → 400 Bad Request (point 2)
+        //   - Header present but session expired/unknown → 404 Not Found (point 3)
+        {
+          if (!sessionId) {
+            return h
+              .response({
+                jsonrpc: "2.0",
+                id: extractId(rpc),
+                error: { code: -32600, message: "Missing Mcp-Session-Id header" },
+              })
+              .code(400);
+          }
+          if (!sessions.has(sessionId)) {
+            return h
+              .response({
+                jsonrpc: "2.0",
+                id: extractId(rpc),
+                error: { code: -32600, message: "Session not found or expired" },
+              })
+              .code(404);
+          }
         }
-        if (!sessions.has(sessionId)) {
-          return h
-            .response({
-              jsonrpc: "2.0",
-              id: extractId(rpc),
-              error: { code: -32600, message: "Session not found or expired" },
-            })
-            .code(404);
+
+        // All methods except initialize require authentication with the mcp:tools scope.
+        {
+          if (!(request.auth.credentials.scope && request.auth.credentials.scope.includes("mcp:tools"))) {
+            return h
+              .response({
+                jsonrpc: "2.0",
+                id: extractId(rpc),
+                error: { code: -32600, message: "Forbidden: insufficient scope" },
+              })
+              .code(403);
+          }
         }
       }
 
@@ -151,6 +167,7 @@ export const mcpPostRoute = applyModifiers(
 
       log.debug(
         {
+          app: request.auth.credentials.app,
           user: request.auth.credentials.user,
           scope: request.auth.credentials.scope,
         },
@@ -201,7 +218,7 @@ export const mcpPostRoute = applyModifiers(
     path: "/mcp",
     options: {
       auth: {
-        strategies: oidcAuthFlows.getStrategyName(),
+        strategy: openidConnectDesign.getStrategyName(),
       },
       description: "Endpoint for handling JSON-RPC 2.0 messages (requests, notifications)",
       tags: ["MCP"],
@@ -347,7 +364,10 @@ export const mcpDeleteRoute = applyModifiers(
     path: "/mcp",
     options: {
       auth: {
-        strategies: oidcAuthFlows.getStrategyName(),
+        strategy: openidConnectDesign.getStrategyName(),
+        access: {
+          scope: "mcp:tools",
+        },
       },
       description: "Endpoint for ending a session (deleting server-side session state)",
       tags: ["MCP"],
@@ -545,7 +565,10 @@ export const mcpGetRoute = applyModifiers(
     path: "/mcp",
     options: {
       auth: {
-        strategies: oidcAuthFlows.getStrategyName(),
+        strategy: openidConnectDesign.getStrategyName(),
+        access: {
+          scope: "mcp:tools",
+        },
       },
       description: "Endpoint for establishing SSE connection for server-to-client messages",
       tags: ["MCP"],

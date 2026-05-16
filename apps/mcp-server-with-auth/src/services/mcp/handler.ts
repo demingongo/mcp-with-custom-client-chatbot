@@ -1,3 +1,4 @@
+import { APP_NAME } from "../../config/app";
 import type {
   CallToolResult,
   JsonRpcErrorResponse,
@@ -8,6 +9,7 @@ import type {
   McpToolDefinition,
   Session,
 } from "../../types";
+import { log } from "../log-service";
 import { BOOKS } from "./data";
 import { randomUUID } from "node:crypto";
 
@@ -105,7 +107,7 @@ function handleInitialize(
   // The client MUST disconnect if it cannot support our version.
   const requestedVersion = (params as { protocolVersion?: string } | null)?.protocolVersion;
   if (requestedVersion && requestedVersion !== SUPPORTED_PROTOCOL_VERSION) {
-    console.warn(
+    log.warn(
       `Client requested protocol version "${requestedVersion}"; server supports "${SUPPORTED_PROTOCOL_VERSION}".`
     );
   }
@@ -117,7 +119,7 @@ function handleInitialize(
     protocolVersion: SUPPORTED_PROTOCOL_VERSION,
     serverInfo: {
       title: "Example Library MCP Server",
-      name: "raw-streamable-http-mcp-server",
+      name: APP_NAME,
       version: "1.0.0",
     },
     capabilities: {

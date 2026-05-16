@@ -8,16 +8,12 @@ import {
   SERVER_BIND_ADDRESS,
 } from "../config/app";
 import { LOG_LEVEL } from "../config/log";
-import oidcAuthFlows from "../security/oidc-multiple-flows";
 import { log } from "../services/log-service";
 import Boom from "@hapi/boom";
-import inert from "@hapi/inert";
-import Vision from "@hapi/vision";
 import { Kaapi } from "@kaapi/kaapi";
 import { validatorZod } from "@kaapi/validator-zod";
 import hapiScalar from "hapi-scalar";
-import path from "path";
-import Pug from "pug";
+import { openidConnectDesign } from "../security/openid-connect";
 
 //#region Create and configure Kaapi app
 
@@ -52,13 +48,12 @@ export const app = new Kaapi({
     version: APP_VERSION,
     ui: {
       swagger: {
-        customCssUrl: "/public/swagger-ui.css",
         customJsStr: `
                 setTimeout(() => {
                 if (document.documentElement.classList.contains("dark-mode")) { document.documentElement.classList.remove("dark-mode"); }
                 }, 10);
                 `,
-        customSiteTitle: `${APP_NAME}`,
+        customSiteTitle: `${APP_NAME} - API Documentation`,
       },
     },
 
@@ -67,6 +62,7 @@ export const app = new Kaapi({
     host: {
       url: EXTERNAL_URI,
       description: APP_DESCRIPTION,
+      variables: {}
     },
 
     // (OpenAPI: register some schemas in components section)
@@ -116,12 +112,8 @@ if (isLocalBind) {
 await app.extend([
   // to use zod validation
   validatorZod,
-  // to serve static files
-  {
-    async integrate(t) {
-      await t.server.register(inert);
-    },
-  },
+  // to use the OpenID Connect security scheme
+  openidConnectDesign,
   // to serve Scalar UI for API docs
   {
     async integrate(t) {
@@ -132,27 +124,10 @@ await app.extend([
           scalarConfig: {
             url: `${DOC_PATH}/schema`,
             theme: "mars",
-            pageTitle: `${APP_NAME}`,
+            pageTitle: `${APP_NAME} - Scalar API Explorer`,
             showDeveloperTools: "never",
             darkMode: false,
           },
-        },
-      });
-    },
-  },
-  // to use OIDC authentication flows
-  oidcAuthFlows,
-  // to use Vision for rendering views
-  {
-    async integrate(t) {
-      await t.server.register(Vision);
-
-      t.server.views({
-        engines: { pug: Pug },
-        relativeTo: process.cwd(),
-        path: "views",
-        compileOptions: {
-          basedir: path.join(process.cwd(), "views"),
         },
       });
     },
@@ -175,7 +150,7 @@ app.base().ext("onPreResponse", (request, h) => {
     if (request.path === "/mcp" && response.output.statusCode === 401) {
       // customize 401 response for the MCP endpoint to include WWW-Authenticate header with resource metadata link
       response.output.headers["WWW-Authenticate"] =
-        `Bearer realm="mcp", resource_metadata="${EXTERNAL_URI}/.well-known/oauth-protected-resource"`;
+        `Bearer realm="mcp", resource_metadata="${request.server.info.protocol}://${request.info.host}/.well-known/oauth-protected-resource"`;
     }
   } else {
     log.debug(

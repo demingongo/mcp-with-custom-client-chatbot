@@ -1,17 +1,12 @@
 import { app } from "./apps/http-app";
-import { oauthAuthorizationServerRoute, oauthRegistrationRoute, oauthProtectedResourceRoute } from "./routes/auth";
+import { oauthProtectedResourceRoute } from "./routes/auth";
 import { healthRoute } from "./routes/health";
 import { mcpDeleteRoute, mcpGetRoute, mcpPostRoute } from "./routes/mcp";
-import { publicFilesRoute } from "./routes/public";
-import oidcAuthFlows from "./security/oidc-multiple-flows";
 import { log } from "./services/log-service";
 
 app
   // health check endpoint
   .route(healthRoute)
-
-  // public files
-  .route(publicFilesRoute)
 
   // MCP endpoint
   .route(mcpPostRoute)
@@ -19,24 +14,15 @@ app
   .route(mcpDeleteRoute)
 
   // auth endpoint
-  .route(oauthProtectedResourceRoute)
-  .route(oauthAuthorizationServerRoute)
-  .route(oauthRegistrationRoute);
+  .route(oauthProtectedResourceRoute);
 
 // start the server
 await app.listen();
 
-// Generate keys at launch
-await oidcAuthFlows.checkAndRotateKeys();
-// Key rotation check every hour (rotation happens according to jwksRotatorOptions.intervalMs)
-setInterval(() => {
-  oidcAuthFlows.checkAndRotateKeys().catch(app.log.error);
-}, 3600 * 1000); // 1h
-
 // log server info
 const BASE_URI = process.env.EXTERNAL_URI || app.base().info.uri;
 
-log.info(`Server running on ${BASE_URI}\n`);
+log.info(`Server running on ${BASE_URI}`);
 log.info(`Scalar UI on ${BASE_URI}/scalar`);
 log.info(`Swagger UI on ${BASE_URI}/docs/api`);
 log.info(`OpenAPI specification on ${BASE_URI}/docs/api/schema`);

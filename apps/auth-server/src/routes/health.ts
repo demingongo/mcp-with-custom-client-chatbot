@@ -1,11 +1,10 @@
-import { sessions } from "../services/mcp/handler";
 import { applyModifiers, groupResponses, MediaTypeModifier, ResponseDocsModifier } from "@kaapi/kaapi";
 
 export const healthRoute = applyModifiers(
   {
     method: "GET",
     path: "/health",
-    handler: () => ({ status: "ok", activeSessions: sessions.size }),
+    handler: () => ({ status: "ok" }),
     options: {
       description: "Health check endpoint",
       tags: ["Health"],
@@ -22,13 +21,11 @@ export const healthRoute = applyModifiers(
               type: "object",
               properties: {
                 status: { type: "string", enum: ["ok"] },
-                activeSessions: { type: "number" },
               },
-              required: ["status", "activeSessions"],
+              required: ["status"],
             })
             .setExample({
               status: "ok",
-              activeSessions: 5,
             })
         )
         .setCode(200)

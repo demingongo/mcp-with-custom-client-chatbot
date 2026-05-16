@@ -9,4 +9,6 @@ export const PORT: number = process.env.PORT && !isNaN(parseInt(process.env.PORT
 export const EXTERNAL_URI: string = process.env.EXTERNAL_URI || `http://${SERVER_BIND_ADDRESS}:${PORT}`;
 
 export const DOC_PATH: string = "/docs/api";
-export const SCHEMA_PROPERTY: string = "schema";
+
+export const OIDC_ISSUER_URI: string = process.env.OIDC_ISSUER_URI || "http://localhost:3003";
+export const OIDC_JWKS_URI: string = process.env.OIDC_JWKS_URI || `${OIDC_ISSUER_URI}/.well-known/jwks.json`;
