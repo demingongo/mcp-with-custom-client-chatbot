@@ -44,7 +44,17 @@ async function startLogin() {
   const btn = document.getElementById("login-btn");
   if (btn) btn.disabled = true;
   try {
-    const res = await fetch(`${BACKEND}/api/auth/login?userId=${encodeURIComponent(userId)}`);
+    // Create a session on demand — only when the user explicitly wants to log in.
+    if (!userId) {
+      const sessionRes = await fetch(`${BACKEND}/api/auth/session`, { method: "POST" });
+      const sessionData = await sessionRes.json();
+      userId = sessionData.userId;
+      localStorage.setItem(SESSION_KEY, userId);
+    }
+
+    const res = await fetch(`${BACKEND}/api/auth/login`, {
+      headers: { Authorization: `Bearer ${userId}` },
+    });
     const data = await res.json();
     if (data.alreadyAuthenticated) {
       authenticated = true;
@@ -69,21 +79,6 @@ async function initSession() {
     localStorage.setItem(AUTH_KEY, "true");
     window.history.replaceState({}, "", window.location.pathname);
     appendMessage("assistant", "You are now logged in. How can I help you?");
-  }
-
-  // First visit: ask the backend to issue a session ID.
-  if (!userId) {
-    try {
-      const res = await fetch(`${BACKEND}/api/auth/session`, { method: "POST" });
-      const data = await res.json();
-      userId = data.userId;
-      localStorage.setItem(SESSION_KEY, userId);
-    } catch (_err) {
-      // Handled by the login banner failing gracefully.
-    }
-    // New session always starts unauthenticated.
-    authenticated = false;
-    localStorage.removeItem(AUTH_KEY);
   }
 
   renderAuthBanner();
@@ -205,10 +200,13 @@ form.addEventListener("submit", async (e) => {
     const data = await res.json();
     removeTyping();
 
-    // Tokens expired or were never issued — kick off the login flow.
+    // Tokens expired or were never issued — discard the stale session entirely so
+    // startLogin() will request a fresh one instead of reusing the old token.
     if (res.status === 401 && data.loginRequired) {
       authenticated = false;
+      userId = null;
       localStorage.removeItem(AUTH_KEY);
+      localStorage.removeItem(SESSION_KEY);
       renderAuthBanner();
       appendMessage("error", "Your session has expired. Please log in again.");
       history.pop(); // remove the unanswered user message

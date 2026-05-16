@@ -6,6 +6,7 @@ import { UserOAuthClientProvider } from "../services/oauth-provider";
 import { consumePendingAuth, savePendingAuth } from "../services/pending-auth-store";
 import { clearUserSession } from "../services/mcp-client";
 import { log } from "../services/log-service";
+import { registerSession, getSessionState, markSessionAuthenticated } from "../services/session-store";
 
 const MCP_ENDPOINT = new URL("/mcp", MCP_BASE_URL);
 
@@ -20,7 +21,11 @@ const MCP_ENDPOINT = new URL("/mcp", MCP_BASE_URL);
 export const createSessionRoute: KaapiServerRoute = {
     method: "post",
     path: "/api/auth/session",
-    handler: () => ({ ok: true, userId: randomUUID() }),
+    handler: async () => {
+        const userId = randomUUID();
+        await registerSession(userId);
+        return { ok: true, userId };
+    },
     options: {
         description: "Create a new session",
         notes: "Returns a session ID (userId) the frontend must store and include in every request as the Authorization header.",
@@ -51,15 +56,28 @@ export const loginRoute: KaapiServerRoute = {
     path: "/api/auth/login",
     handler: async (request, h) => {
         try {
-            const userId = (request.query as Record<string, string>).userId;
+            // Read the session ID from the Authorization header to avoid exposing it in
+            // server access logs or Referer headers (it becomes a valid Bearer token after auth).
+            const authHeader = (request.headers as Record<string, string>)["authorization"] ?? "";
+            const userId = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : "";
             if (!userId) {
-                return h.response({ ok: false, error: "userId query parameter is required" }).code(400);
+                return h.response({ ok: false, error: "Authorization: Bearer <sessionId> header is required" }).code(401);
+            }
+
+            const sessionState = await getSessionState(userId);
+            if (sessionState === undefined) {
+                return h.response({ ok: false, error: "Unknown session ID" }).code(403);
+            }
+            if (sessionState === "authenticated") {
+                return { ok: true, alreadyAuthenticated: true };
             }
 
             const provider = new UserOAuthClientProvider(userId);
             const result = await auth(provider, { serverUrl: MCP_ENDPOINT });
 
             if (result === "AUTHORIZED") {
+                // Tokens already present from a previous flow — sync the session state.
+                await markSessionAuthenticated(userId);
                 return { ok: true, alreadyAuthenticated: true };
             }
 
@@ -110,6 +128,8 @@ export const callbackRoute: KaapiServerRoute = {
 
         const provider = new UserOAuthClientProvider(pending.userId, { codeVerifier: pending.codeVerifier });
         await auth(provider, { serverUrl: MCP_ENDPOINT, authorizationCode: code });
+
+        await markSessionAuthenticated(pending.userId);
 
         // Clear any stale session so the next chat request creates a fresh authenticated connection.
         clearUserSession(pending.userId);
