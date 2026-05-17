@@ -1,4 +1,4 @@
-import { OIDC_ISSUER_URI } from "../config/app";
+import { OIDC_ISSUER_URL } from "../config/app";
 import { applyModifiers, groupResponses, MediaTypeModifier, ResponseDocsModifier } from "@kaapi/kaapi";
 
 export const oauthProtectedResourceRoute = applyModifiers(
@@ -7,7 +7,7 @@ export const oauthProtectedResourceRoute = applyModifiers(
     path: "/.well-known/oauth-protected-resource",
     handler: ({ info, server }) => ({
       resource: `${server.info.protocol}://${info.host}/mcp`,
-      authorization_servers: [OIDC_ISSUER_URI],
+      authorization_servers: [OIDC_ISSUER_URL],
       bearer_methods_supported: ["header"],
       scopes_supported: ["openid", "profile", "offline_access", "mcp:tools"],
     }),

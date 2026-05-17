@@ -1,3 +1,4 @@
+import { EXTERNAL_URI } from "../config/app";
 import { log } from "../services/log-service";
 import { flow as authCodeFlow } from "./authorization-code";
 import { jwksAuthority } from "./jwks";
@@ -18,9 +19,7 @@ import { z } from "zod";
 
 export function createWebStandardRequest<Refs extends ReqRef = ReqRefDefaults>(request: KaapiRequest<Refs>): Request {
   // Build the absolute URL required by the Request constructor
-  const protocol = request.server.info.protocol;
-  const host = request.info.host; // Reads the Host header
-  const fullUrl = `${protocol}://${host}${request.url.pathname}${request.url.search}`;
+  const fullUrl = `${EXTERNAL_URI}${request.url.pathname}${request.url.search}`;
 
   // Build the Web Standard Request options object
   const headers: Record<string, string> = {};

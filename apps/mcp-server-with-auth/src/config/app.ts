@@ -10,5 +10,5 @@ export const EXTERNAL_URI: string = process.env.EXTERNAL_URI || `http://${SERVER
 
 export const DOC_PATH: string = "/docs/api";
 
-export const OIDC_ISSUER_URI: string = process.env.OIDC_ISSUER_URI || "http://localhost:3003";
-export const OIDC_JWKS_URI: string = process.env.OIDC_JWKS_URI || `${OIDC_ISSUER_URI}/.well-known/jwks.json`;
+export const OIDC_ISSUER_URL: string = process.env.OIDC_ISSUER_URL || "http://localhost:3003";
+export const OIDC_JWKS_URL: string = process.env.OIDC_JWKS_URL || `${OIDC_ISSUER_URL}/.well-known/jwks.json`;

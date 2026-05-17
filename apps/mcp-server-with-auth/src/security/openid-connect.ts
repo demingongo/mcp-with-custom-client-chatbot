@@ -1,4 +1,4 @@
-import { OIDC_ISSUER_URI, OIDC_JWKS_URI } from "../config/app";
+import { OIDC_ISSUER_URL, OIDC_JWKS_URL } from "../config/app";
 import { log } from "../services/log-service";
 import { APIKeyAuthDesign } from "@kaapi/kaapi";
 import { ApiKeyUtil, SecuritySchemeObject } from "@novice1/api-doc-generator";
@@ -11,7 +11,7 @@ export class RemoteOpenIDConnectDocs extends ApiKeyUtil {
       [this.getSecuritySchemeName()]: {
         type: "openIdConnect",
         description: "Authenticate using an OpenID Connect provider",
-        openIdConnectUrl: `${OIDC_ISSUER_URI}/.well-known/openid-configuration`,
+        openIdConnectUrl: `${OIDC_ISSUER_URL}/.well-known/openid-configuration`,
       },
     };
   }
@@ -34,7 +34,7 @@ export const openidConnectDesign = new RemoteOpenIDConnect({
       try {
         if (token) {
           const client = jwksClient({
-            jwksUri: `${OIDC_JWKS_URI}`,
+            jwksUri: `${OIDC_JWKS_URL}`,
             timeout: 10000, // 10s
           });
 

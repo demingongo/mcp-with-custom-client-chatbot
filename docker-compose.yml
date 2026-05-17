@@ -2,8 +2,8 @@ services:
   frontend:
     container_name: frontend
     build:
-      context: ./frontend
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: apps/frontend-with-auth/Dockerfile
     ports:
       - "8080:8080"
     depends_on:
@@ -12,16 +12,18 @@ services:
   backend:
     container_name: backend
     build:
-      context: ./backend
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: apps/backend-auth-code/Dockerfile
     ports:
       - "3000:3000"
+    extra_hosts:
+      - "localhost:host-gateway" # allows the backend to call services on the host machine using localhost (necessary for auth server discovery and for the frontend to call the backend using the EXTERNAL_URI)
     environment:
-      - NODE_ENV=production
-      - PORT=3000
-      - MCP_BASE_URL=http://mcp-server:3001
+      - EXTERNAL_URI=http://localhost:3000
+      - FRONTEND_URL=http://localhost:8080
+      - MCP_BASE_URL=http://mcp-server:3000 # used internally to call the MCP server
       - OLLAMA_MODEL=${OLLAMA_MODEL:-qwen2.5:3b}
-      - OLLAMA_BASE_URL=http://ollama:11434
+      - OLLAMA_BASE_URL=http://ollama:11434 # used internally to call the Ollama server
     depends_on:
       mcp-server:
         condition: service_started
@@ -30,13 +32,23 @@ services:
   mcp-server:
     container_name: mcp-server
     build:
-      context: ./mcp-server
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: apps/mcp-server-with-auth/Dockerfile
     ports:
-      - "3001:3001"
+      - "3001:3000"
     environment:
-      - NODE_ENV=production
-      - PORT=3001
+      - EXTERNAL_URI=http://localhost:3001
+      - OIDC_ISSUER_URL=http://localhost:3002 # used externally (for other services to discover the auth server)
+      - OIDC_JWKS_URL=http://auth-server:3000/.well-known/jwks.json # used internally (to fetch the JWKS from the auth server)
+  auth-server:
+    container_name: auth-server
+    build:
+      context: .
+      dockerfile: apps/auth-server/Dockerfile
+    ports:
+      - "3002:3000"
+    environment:
+      - EXTERNAL_URI=http://localhost:3002
 
   ollama:
     container_name: ollama
