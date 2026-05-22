@@ -108,7 +108,7 @@ export const listCategoriesRoute = applyModifiers(
 // --- Search products by keyword across multiple fields ---
 
 const searchQuerySchema = z.object({
-  q: z.string().trim().max(100).meta({ description: "Search keywords." }).optional(),
+  query: z.string().trim().max(100).meta({ description: "Search keywords." }).optional(),
 });
 
 const searchProductsResponseSchema = z.object({
@@ -131,11 +131,10 @@ type SearchProductsResponseType = z.infer<typeof searchProductsResponseSchema>;
 export const searchProductsRoute = applyModifiers(
   withSchema({ query: searchQuerySchema }).route({
     handler: async ({ query }) => {
-      const q = query.q ?? "";
-      const results = searchProducts(q);
+      const results = searchProducts(query);
       const response: SearchProductsResponseType = {
         ok: true,
-        query: q,
+        query: query.query ?? "",
         count: results.length,
         results: results.map((p) => ({
           id: p.id,
@@ -198,7 +197,7 @@ type ProductsByCategoryResponseType = z.infer<typeof productsByCategoryResponseS
 export const productsByCategoryRoute = applyModifiers(
   withSchema({ params: productsByCategoryParamsSchema }).route({
     handler: async ({ params }) => {
-      const results = filterByCategory(params.category);
+      const results = filterByCategory({ category: params.category });
       const response: ProductsByCategoryResponseType = {
         ok: true,
         category: params.category,
@@ -271,7 +270,7 @@ type GetProductErrorResponseType = z.infer<typeof getProductErrorResponseSchema>
 export const getProductRoute = applyModifiers(
   withSchema({ params: idParamsSchema }).route({
     handler: async ({ params }, h) => {
-      const product = getProductById(params.id);
+      const product = getProductById({ id: params.id });
       if (!product) {
         const response: GetProductErrorResponseType = {
           ok: false,

@@ -4,7 +4,7 @@ import stylisticJs from "@stylistic/eslint-plugin";
 import typescriptEslint from "@typescript-eslint/eslint-plugin";
 import tsParser from "@typescript-eslint/parser";
 import eslintConfigPrettier from "eslint-config-prettier/flat";
-import importPlugin from "eslint-plugin-import";
+import importPlugin from "eslint-import-resolver-typescript";
 import { defineConfig } from "eslint/config";
 import globals from "globals";
 import path from "node:path";

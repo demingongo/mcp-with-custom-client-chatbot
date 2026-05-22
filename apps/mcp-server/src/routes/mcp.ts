@@ -1,13 +1,6 @@
 import { app } from "../apps/http-app";
 import { log } from "../services/log-service";
-import {
-  filterByCategory,
-  getProductById,
-  listCategories,
-  listProducts,
-  searchProducts,
-} from "../services/product-service";
-import { McpRequest, McpResponse, McpToolDefinition } from "../types";
+import { McpToolDefinition } from "../types";
 import { KaapiServerRoute } from "@kaapi/kaapi";
 import { OpenAPIV3_1 } from "openapi-types";
 
@@ -197,6 +190,7 @@ export const toolsV2Route: KaapiServerRoute = {
   },
 };
 
+/*
 export const invokeRoute: KaapiServerRoute = {
   handler: (request, h) => {
     const body = request.payload as McpRequest;
@@ -260,3 +254,4 @@ export const invokeRoute: KaapiServerRoute = {
     id: "mcp_invoke_tool",
   },
 };
+*/

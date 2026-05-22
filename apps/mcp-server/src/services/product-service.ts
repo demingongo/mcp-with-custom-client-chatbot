@@ -1,7 +1,8 @@
-import { Product, ProductCatalog } from "../types";
+import { Product, ProductCatalog } from "../types-products";
 import { log } from "./log-service";
 import fs from "fs";
 import path from "path";
+import { z } from 'zod';
 
 const DATA_PATH = path.join(process.cwd(), "data", "products.json");
 
@@ -26,15 +27,25 @@ export function listProducts(): Product[] {
   return loadCatalog().products;
 }
 
-export function getProductById(id: string): Product | undefined {
+export const productByIdArgsSchema = z.object({
+  id: z.string().describe("The unique identifier of the product (e.g. 'connectauz-analytics')."),
+});
+
+export function getProductById(args: z.infer<typeof productByIdArgsSchema>): Product | undefined {
+  const { id } = args;
   const needle = id.toLowerCase().trim();
   const found = listProducts().find((p) => p.id.toLowerCase() === needle || p.name.toLowerCase() === needle);
   log.debug({ id, hit: Boolean(found) }, "getProductById");
   return found;
 }
 
-export function searchProducts(query: string): Product[] {
-  const q = query.toLowerCase().trim();
+export const searchProductsArgsSchema = z.object({
+  query: z.string().optional()
+    .describe("A keyword or phrase to search for in product names, descriptions, categories, features, and use cases."),
+});
+
+export function searchProducts(args: z.infer<typeof searchProductsArgsSchema>): Product[] {
+  const q = args.query?.toLowerCase().trim() ?? "";
   if (!q) return listProducts();
   const results = listProducts().filter((p) => {
     const haystack = [
@@ -56,8 +67,12 @@ export function searchProducts(query: string): Product[] {
   return results;
 }
 
-export function filterByCategory(category: string): Product[] {
-  const c = category.toLowerCase().trim();
+export const filterByCategoryArgsSchema = z.object({
+  category: z.string().describe("Category keyword, e.g. 'Fleet'."),
+});
+
+export function filterByCategory(args: z.infer<typeof filterByCategoryArgsSchema>): Product[] {
+  const c = args.category.toLowerCase().trim();
   const results = listProducts().filter((p) => p.category.toLowerCase().includes(c));
   log.debug({ category: c, hits: results.length }, "filterByCategory");
   return results;
