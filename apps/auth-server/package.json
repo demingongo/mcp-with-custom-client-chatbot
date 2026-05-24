@@ -14,8 +14,8 @@
   "dependencies": {
     "@hapi/boom": "^10.0.1",
     "@hapi/vision": "^7.0.3",
-    "@kaapi/kaapi": "^0.0.44",
-    "@kaapi/validator-zod": "^0.0.44",
+    "@kaapi/kaapi": "^0.0.45",
+    "@kaapi/validator-zod": "^0.0.45",
     "@novice1/api-doc-generator": "^1.2.x",
     "@saurbit/oauth2": "^0.1.5",
     "@saurbit/oauth2-jwt": "^0.1.3",
