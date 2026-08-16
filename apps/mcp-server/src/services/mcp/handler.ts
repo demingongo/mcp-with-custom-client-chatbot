@@ -21,13 +21,13 @@ export const sessions = new Map<string, Session>();
 // Tool definitions
 // ---------------------------------------------------------------------------
 
-const cachedTools: {
-  tools: McpToolDefinition[];
-  updatedAt: number;
-} = {
-  tools: [],
-  updatedAt: 0,
-};
+//const cachedTools: {
+//  tools: McpToolDefinition[];
+//  updatedAt: number;
+//} = {
+//  tools: [],
+//  updatedAt: 0,
+//};
 
 const TOOLS: McpToolDefinition[] = [
   {
