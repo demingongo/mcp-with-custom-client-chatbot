@@ -16,7 +16,7 @@
     "@hapi/boom": "^10.0.1",
     "@kaapi/kaapi": "^0.0.46",
     "@kaapi/validator-arktype": "^0.0.46",
-    "@modelcontextprotocol/client": "^2.0.0-alpha.2",
+    "@modelcontextprotocol/client": "^2.0.0",
     "arktype": "^2.2.0",
     "hapi-scalar": "^1.1.0",
     "pino": "^10.3.1",
