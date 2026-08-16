@@ -1,8 +1,8 @@
+import { createClientResolver, KaapiOIDCAuthorizationCodeFlowBuilder } from "@kaapi/oauth2-auth-design";
 import { REGISTERED_USERS, VALID_CLIENTS } from "../data/users";
 import { log } from "../services/log-service";
 import { jwksAuthority } from "./jwks";
 import Boom from "@hapi/boom";
-import { OIDCAuthorizationCodeFlowBuilder } from "@saurbit/oauth2";
 
 const codeStorage: Record<
   string,
@@ -27,8 +27,17 @@ const refreshTokenStorage: Record<
   }
 > = {};
 
-export const flow = new OIDCAuthorizationCodeFlowBuilder({
+export const flow = new KaapiOIDCAuthorizationCodeFlowBuilder({
   securitySchemeName: "oidc-auth-code",
+  parseAuthorizationEndpointData: async (req) => {
+    const payload = req.payload as Record<string, unknown>;
+    const username = typeof payload?.username === 'string' ? payload.username : undefined;
+    const password = typeof payload?.password === 'string' ? payload.password : undefined;
+    return {
+      username,
+      password,
+    };
+  }
 })
   .setScopes({
     openid: "OpenID Connect scope",
@@ -65,6 +74,9 @@ export const flow = new OIDCAuthorizationCodeFlowBuilder({
       scopes: client.allowed_scopes,
     };
   })
+  .setLoginFormRenderer(async (_req, h, _result, { statusCode, errorMessage }) => {
+    return h.view('login', { errorMessage }).code(statusCode);
+  })
   .getUserForAuthentication((_ctxt, parsedData) => {
     const user = REGISTERED_USERS.find((u) => u.username === parsedData.username && u.password === parsedData.password);
     if (!user) return undefined;
@@ -95,99 +107,101 @@ export const flow = new OIDCAuthorizationCodeFlowBuilder({
   .getClient(async (tokenRequest) => {
     const client = VALID_CLIENTS.find((c) => c.client_id === tokenRequest.clientId && !c.internal);
     if (!client) return undefined;
-    if (tokenRequest.grantType === "authorization_code" && tokenRequest.code) {
-      const codeData = codeStorage[tokenRequest.code];
-      if (!codeData) return undefined;
-      if (codeData.clientId !== tokenRequest.clientId) return undefined;
-      if (codeData.expiresAt < Date.now()) {
-        delete codeStorage[tokenRequest.code];
-        return undefined;
+
+    return await createClientResolver({
+      // handle the authorization code grant type
+      authorizationCode: async ({ code, codeVerifier }) => {
+        const codeData = codeStorage[code];
+        if (!codeData) return undefined;
+        if (codeData.clientId !== client.client_id) return undefined;
+        if (codeData.expiresAt < Date.now()) {
+          delete codeStorage[code];
+          return undefined;
+        }
+
+        if (codeVerifier && codeData.codeChallenge) {
+          // Public client — verify PKCE code_verifier against the stored code_challenge
+          const data = new TextEncoder().encode(codeVerifier);
+          const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+          const hashArray = new Uint8Array(hashBuffer);
+          const base64url = btoa(String.fromCharCode(...hashArray))
+            .replace(/\+/g, "-")
+            .replace(/\//g, "_")
+            .replace(/=+$/, "");
+          if (base64url !== codeData.codeChallenge) return undefined;
+        } else {
+          return undefined;
+        }
+
+        const user = REGISTERED_USERS.find((u) => u.id === codeData.userId);
+        if (!user) return undefined;
+
+        return {
+          id: client.client_id,
+          grants:
+            client.meta && "grant_types" in client.meta ? (client.meta.grant_types as string[]) : ["authorization_code"],
+          redirectUris: client.meta && "redirect_uris" in client.meta ? (client.meta.redirect_uris as string[]) : [],
+          scopes: client.allowed_scopes,
+          metadata: {
+            accessScope: codeData.scope,
+            userId: codeData.userId,
+            username: user.username,
+            userEmail: user.email,
+            userFullName: user.fullName,
+            nonce: codeData.nonce,
+          },
+        };
+      },
+      // handle the refresh token grant type
+      refreshToken: async ({ clientId, refreshToken, scope }) => {
+        const refreshTokenData = refreshTokenStorage[refreshToken];
+
+        const createBoomError = (errorCode: string, errorDescription: string) => {
+          const errorResponse = Boom.badRequest(errorCode);
+          errorResponse.output.payload.error = errorCode;
+          errorResponse.output.payload.error_description = errorDescription;
+          return errorResponse;
+        };
+
+        // validate the refresh token and its association with the client
+        if (!refreshTokenData) throw createBoomError("invalid_grant", "Invalid refresh token");
+
+        if (refreshTokenData.clientId !== clientId)
+          throw createBoomError("invalid_grant", "Invalid client for refresh token");
+
+        // for security, remove the used refresh token to prevent reuse (rotate on each use)
+        delete refreshTokenStorage[refreshToken];
+
+        // check if the refresh token has expired
+        if (refreshTokenData.expiresAt < Date.now()) {
+          throw createBoomError("invalid_grant", "Refresh token has expired");
+        }
+
+        const user = REGISTERED_USERS.find((u) => u.id === refreshTokenData.userId);
+        if (!user) return undefined;
+
+        // narrow the scope if the client requests a subset
+        const requestedScope = Array.isArray(scope) ? scope : [];
+        const accessScope = requestedScope.length
+          ? refreshTokenData.scope.filter((s) => requestedScope.includes(s))
+          : refreshTokenData.scope;
+
+        return {
+          id: client.client_id,
+          grants:
+            client.meta && "grant_types" in client.meta ? (client.meta.grant_types as string[]) : ["authorization_code"],
+          redirectUris: client.meta && "redirect_uris" in client.meta ? (client.meta.redirect_uris as string[]) : [],
+          scopes: client.allowed_scopes,
+          metadata: {
+            accessScope,
+            userId: refreshTokenData.userId,
+            username: user.username,
+            userEmail: user.email,
+            userFullName: user.fullName,
+          },
+        };
       }
-
-      if (tokenRequest.codeVerifier && codeData.codeChallenge) {
-        // Public client — verify PKCE code_verifier against the stored code_challenge
-        const data = new TextEncoder().encode(tokenRequest.codeVerifier);
-        const hashBuffer = await crypto.subtle.digest("SHA-256", data);
-        const hashArray = new Uint8Array(hashBuffer);
-        const base64url = btoa(String.fromCharCode(...hashArray))
-          .replace(/\+/g, "-")
-          .replace(/\//g, "_")
-          .replace(/=+$/, "");
-        if (base64url !== codeData.codeChallenge) return undefined;
-      } else {
-        return undefined;
-      }
-
-      const user = REGISTERED_USERS.find((u) => u.id === codeData.userId);
-      if (!user) return undefined;
-
-      return {
-        id: client.client_id,
-        grants:
-          client.meta && "grant_types" in client.meta ? (client.meta.grant_types as string[]) : ["authorization_code"],
-        redirectUris: client.meta && "redirect_uris" in client.meta ? (client.meta.redirect_uris as string[]) : [],
-        scopes: client.allowed_scopes,
-        metadata: {
-          accessScope: codeData.scope,
-          userId: codeData.userId,
-          username: user.username,
-          userEmail: user.email,
-          userFullName: user.fullName,
-          nonce: codeData.nonce,
-        },
-      };
-    }
-
-    // handle the refresh token grant type
-    if (tokenRequest.grantType === "refresh_token" && tokenRequest.clientId === client.client_id) {
-      const refreshTokenData = refreshTokenStorage[tokenRequest.refreshToken];
-
-      const createBoomError = (errorCode: string, errorDescription: string) => {
-        const errorResponse = Boom.badRequest(errorCode);
-        errorResponse.output.payload.error = errorCode;
-        errorResponse.output.payload.error_description = errorDescription;
-        return errorResponse;
-      };
-
-      // validate the refresh token and its association with the client
-      if (!refreshTokenData) throw createBoomError("invalid_grant", "Invalid refresh token");
-
-      if (refreshTokenData.clientId !== tokenRequest.clientId)
-        throw createBoomError("invalid_grant", "Invalid client for refresh token");
-
-      // for security, remove the used refresh token to prevent reuse (rotate on each use)
-      delete refreshTokenStorage[tokenRequest.refreshToken];
-
-      // check if the refresh token has expired
-      if (refreshTokenData.expiresAt < Date.now()) {
-        throw createBoomError("invalid_grant", "Refresh token has expired");
-      }
-
-      const user = REGISTERED_USERS.find((u) => u.id === refreshTokenData.userId);
-      if (!user) return undefined;
-
-      // narrow the scope if the client requests a subset
-      const requestedScope = Array.isArray(tokenRequest.scope) ? tokenRequest.scope : [];
-      const accessScope = requestedScope.length
-        ? refreshTokenData.scope.filter((s) => requestedScope.includes(s))
-        : refreshTokenData.scope;
-
-      return {
-        id: client.client_id,
-        grants:
-          client.meta && "grant_types" in client.meta ? (client.meta.grant_types as string[]) : ["authorization_code"],
-        redirectUris: client.meta && "redirect_uris" in client.meta ? (client.meta.redirect_uris as string[]) : [],
-        scopes: client.allowed_scopes,
-        metadata: {
-          accessScope,
-          userId: refreshTokenData.userId,
-          username: user.username,
-          userEmail: user.email,
-          userFullName: user.fullName,
-        },
-      };
-    }
-    return undefined;
+    })(tokenRequest);
   })
   .generateAccessToken(async (grantContext) => {
     const accessScope = Array.isArray(grantContext.client.metadata?.accessScope)
@@ -293,7 +307,7 @@ export const flow = new OIDCAuthorizationCodeFlowBuilder({
       refreshToken,
     };
   })
-  .verifyToken(async (_req, { token }) => {
+  .tokenVerifier(async (_req, { token }) => {
     try {
       const payload = await jwksAuthority.verify(token);
       if (payload && typeof payload.scope === "string") {

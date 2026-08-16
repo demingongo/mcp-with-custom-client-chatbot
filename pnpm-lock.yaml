@@ -81,20 +81,23 @@ importers:
         specifier: ^7.0.3
         version: 7.0.3
       '@kaapi/kaapi':
-        specifier: ^0.0.45
-        version: 0.0.45
+        specifier: ^0.0.46
+        version: 0.0.46
+      '@kaapi/oauth2-auth-design':
+        specifier: ^0.0.46
+        version: 0.0.46(@saurbit/oauth2-jwt@0.1.7(@saurbit/oauth2@0.1.11))(@saurbit/oauth2@0.1.11)
       '@kaapi/validator-zod':
-        specifier: ^0.0.45
-        version: 0.0.45(zod@4.4.3)
+        specifier: ^0.0.46
+        version: 0.0.46(zod@4.4.3)
       '@novice1/api-doc-generator':
         specifier: ^1.2.x
         version: 1.2.6
       '@saurbit/oauth2':
-        specifier: ^0.1.5
-        version: 0.1.5
+        specifier: ^0.1.11
+        version: 0.1.11
       '@saurbit/oauth2-jwt':
-        specifier: ^0.1.3
-        version: 0.1.3(@saurbit/oauth2@0.1.5)
+        specifier: ^0.1.7
+        version: 0.1.7(@saurbit/oauth2@0.1.11)
       pino:
         specifier: ^10.3.1
         version: 10.3.1
@@ -121,11 +124,11 @@ importers:
         specifier: ^10.0.1
         version: 10.0.1
       '@kaapi/kaapi':
-        specifier: ^0.0.45
-        version: 0.0.45
+        specifier: ^0.0.46
+        version: 0.0.46
       '@kaapi/validator-arktype':
-        specifier: ^0.0.45
-        version: 0.0.45(arktype@2.2.0)
+        specifier: ^0.0.46
+        version: 0.0.46(arktype@2.2.0)
       '@modelcontextprotocol/client':
         specifier: ^2.0.0-alpha.2
         version: 2.0.0-alpha.2(@cfworker/json-schema@4.1.1)
@@ -151,11 +154,11 @@ importers:
         specifier: ^10.0.1
         version: 10.0.1
       '@kaapi/kaapi':
-        specifier: ^0.0.45
-        version: 0.0.45
+        specifier: ^0.0.46
+        version: 0.0.46
       '@kaapi/validator-arktype':
-        specifier: ^0.0.45
-        version: 0.0.45(arktype@2.2.0)
+        specifier: ^0.0.46
+        version: 0.0.46(arktype@2.2.0)
       '@modelcontextprotocol/client':
         specifier: ^2.0.0-alpha.2
         version: 2.0.0-alpha.2(@cfworker/json-schema@4.1.1)
@@ -201,11 +204,11 @@ importers:
         specifier: ^7.1.0
         version: 7.1.0
       '@kaapi/kaapi':
-        specifier: ^0.0.45
-        version: 0.0.45
+        specifier: ^0.0.46
+        version: 0.0.46
       '@kaapi/validator-zod':
-        specifier: ^0.0.45
-        version: 0.0.45(zod@4.4.3)
+        specifier: ^0.0.46
+        version: 0.0.46(zod@4.4.3)
       '@modelcontextprotocol/server':
         specifier: ^2.0.0-alpha.2
         version: 2.0.0-alpha.2(@cfworker/json-schema@4.1.1)
@@ -232,11 +235,11 @@ importers:
         specifier: ^10.0.1
         version: 10.0.1
       '@kaapi/kaapi':
-        specifier: ^0.0.45
-        version: 0.0.45
+        specifier: ^0.0.46
+        version: 0.0.46
       '@kaapi/validator-zod':
-        specifier: ^0.0.45
-        version: 0.0.45(zod@4.4.3)
+        specifier: ^0.0.46
+        version: 0.0.46(zod@4.4.3)
       '@novice1/api-doc-generator':
         specifier: ^1.2.x
         version: 1.2.6
@@ -326,6 +329,14 @@ packages:
 
   '@cfworker/json-schema@4.1.1':
     resolution: {integrity: sha512-gAmrUZSGtKc3AiBL71iNWxDsyUC5uMaKKGdvzYsBoTW/xi42JQHl7eKV2OYzCUqvc+D2RCcf7EXY2iCyFIk6og==}
+
+  '@clack/core@1.4.3':
+    resolution: {integrity: sha512-/kr3UWNtdJfxZtPgDqUOmG2pvwlmcLGheex5yiZKdwbzZJxhV+HMNR9QNmyY5cGwTNV6LrR7Jtp+KjhUAP1qBQ==}
+    engines: {node: '>= 20.12.0'}
+
+  '@clack/prompts@1.7.0':
+    resolution: {integrity: sha512-y7/yvZ2TPAnR9+jnc00klvNNLkJiXFFrQA/hlLCcxA9a2A4zQIOimyFQ9XfwYKiGD1fb5GY8vbKIIgO8d5Tb2A==}
+    engines: {node: '>= 20.12.0'}
 
   '@colors/colors@1.6.0':
     resolution: {integrity: sha512-Ir+AOibqzrIsL6ajt3Rz3LskB7OiMVHqltZmspbW/TJuTVuyOMirVqAkjfY6JISiLHgyNqicAC8AyHHGzNd/dA==}
@@ -696,19 +707,29 @@ packages:
   '@jridgewell/trace-mapping@0.3.9':
     resolution: {integrity: sha512-3Belt6tdc8bPgAtbcmdtNJlirVoTmEb5e2gC94PnkwEW9jI6CAHUeoG85tjWP5WquqfavoMtMwiG4P926ZKKuQ==}
 
-  '@kaapi/kaapi@0.0.45':
-    resolution: {integrity: sha512-nSv0aqYHsjFhny6jfrLgXIvb/xl5oUU7s2U2g57joq6UGc13oJ7VproO9Xp1hRQN3NXBfniG6TbsFmTZXZpBtQ==}
+  '@kaapi/cli@0.0.46':
+    resolution: {integrity: sha512-6fi/+HtPSqOzait0HvTCq0Ra1X3cg/vFPt6ZB67pcTb3NayTY1SFAdfHedMqKs9MdamAtjMY70rd28DFgEv8GA==}
+    hasBin: true
 
-  '@kaapi/server@0.0.45':
-    resolution: {integrity: sha512-jlGwDM3h+0F6Z8ZEsZEJ/W7rm5f5zxrSW+bBUDq7ZrOrU2/72uozF32RIYfsKYKyPRLONJfYogjPCKbXKodgig==}
+  '@kaapi/kaapi@0.0.46':
+    resolution: {integrity: sha512-m88yrVMIL9ody9IJP88JX6IxByogWRDM5Vzy1Rt/sQ4ZeG1RTajwUPG0OnzHiga70X7W3JxhlzIZJ7AGxyNAZA==}
 
-  '@kaapi/validator-arktype@0.0.45':
-    resolution: {integrity: sha512-9XduNiVrl3iSOr5sF2BFQ8f5+oO6WBb1vpg+9kRUTMTa86hsr4LoBIEv6bAgcBAz5e+O3V7GKUd0Tgg/TsZAvg==}
+  '@kaapi/oauth2-auth-design@0.0.46':
+    resolution: {integrity: sha512-EWXy83H3u/FPmjdhH6JPQGZxagb5rJdi3DS/Ay4x4l6jJYC2zpoRgCwidroKJi4ADl9AEH+dRXXR/h8wnh53IQ==}
+    peerDependencies:
+      '@saurbit/oauth2': ^0.1.11
+      '@saurbit/oauth2-jwt': ^0.1.7
+
+  '@kaapi/server@0.0.46':
+    resolution: {integrity: sha512-lymZjfcycViXJmu/0Q1X0hLigYobehoI+QMTf+xQK7ZPxoy+EXwjQOp1DuZCrO429wNboyNgkPrJMWxU0oAOxg==}
+
+  '@kaapi/validator-arktype@0.0.46':
+    resolution: {integrity: sha512-X9Dbq7PCxabqgfHSAd16ITczxbFOUzHDse0+guMT8hcU2aT0kWQdSO/bxQJ1FB0kXbxXykV/HMYP9UhrMZv29A==}
     peerDependencies:
       arktype: ^2.1.25
 
-  '@kaapi/validator-zod@0.0.45':
-    resolution: {integrity: sha512-cGFs/CzQCVA63F+I0Cbd3wrfZXIBbR2PbmAQK5qKhuSUhC3fQ3VYPXp0tYN2RaUvXRhVr2pH/CNcnNyJK0GQKg==}
+  '@kaapi/validator-zod@0.0.46':
+    resolution: {integrity: sha512-TTkNihm6doJZRQH34lGPphhePcWG50V64UYUD5vT+ssOxr9DbzOXgvW3KZMutn5Mq4IzliEtKCRp6OXFaZ/6Nw==}
     peerDependencies:
       zod: ^4.0.0
 
@@ -890,13 +911,13 @@ packages:
   '@rtsao/scc@1.1.0':
     resolution: {integrity: sha512-zt6OdqaDoOnJ1ZYsCYGt9YmWzDXl4vQdKTyJev62gFhRGKdx7mcT54V9KIjg+d2wi9EXsPvAPKe7i7WjfVWB8g==}
 
-  '@saurbit/oauth2-jwt@0.1.3':
-    resolution: {integrity: sha512-FkjTwRkvZ2lj4gp/ssIzHn8x/ttglyYt4Wqb6iLPJrSISTcmh7LNYSCewwteuG//xIfXmt4q7Jct/9MQmYNlxg==}
+  '@saurbit/oauth2-jwt@0.1.7':
+    resolution: {integrity: sha512-9Qzzlckl8vEvDrg967WTZ/VY078L19JW3D5+OeFOWDYE1S5kciLCYm8UDWqDLIBH1fZDSOHd46qMd5/w9d0EEA==}
     peerDependencies:
-      '@saurbit/oauth2': ^0.1.1
+      '@saurbit/oauth2': ^0.1.8
 
-  '@saurbit/oauth2@0.1.5':
-    resolution: {integrity: sha512-c1HXz1GZ1ALE5kmmKUch1IQsLK4WsbzAQGJu/Vyu5TGHBOvXsZto+OzXuaavblfezK7Vu2DZclYK3fW4yocMeg==}
+  '@saurbit/oauth2@0.1.11':
+    resolution: {integrity: sha512-v32WshU0Y7JOed3kuii9UKnZETAiA3q3aX5weTw8tNdD31J3vVyVigm9iCCUrLQUwZC/oYp96Y0JENHc8Vyq+Q==}
 
   '@scalar/client-side-rendering@0.1.7':
     resolution: {integrity: sha512-IDzjKF93jrOljlvKBsLHXT1FPWgz56jFrMPC+iLihREp1qH8wF92mG8Zpakw8cURkEuw5WijRk0xNBP2moGyuw==}
@@ -1687,6 +1708,15 @@ packages:
   fast-safe-stringify@2.1.1:
     resolution: {integrity: sha512-W+KJc2dmILlPplD/H4K9l9LcAHAfPtP6BY84uVLXQ6Evcz9Lcg33Y2z1IVblT6xdY54PXYVHEv+0Wpq8Io6zkA==}
 
+  fast-string-truncated-width@3.0.3:
+    resolution: {integrity: sha512-0jjjIEL6+0jag3l2XWWizO64/aZVtpiGE3t0Zgqxv0DPuxiMjvB3M24fCyhZUO4KomJQPj3LTSUnDP3GpdwC0g==}
+
+  fast-string-width@3.0.2:
+    resolution: {integrity: sha512-gX8LrtNEI5hq8DVUfRQMbr5lpaS4nMIWV+7XEbXk2b8kiQIizgnlr12B4dA3ZEx3308ze0O4Q1R+cHts8kyUJg==}
+
+  fast-wrap-ansi@0.2.2:
+    resolution: {integrity: sha512-7F2Fl+TjRSenLqlU3UjSH0iyqopqoZIu7eZVpEirP2g1GtWa2G/ecEmBdgz31+Mxr+ELclgg6sokpSFIQiZ02Q==}
+
   fdir@6.5.0:
     resolution: {integrity: sha512-tIbYtZbucOs0BRGqPJkshJUYdL+SDH7dVM8gjy+ERp3WAUjLEFJE+02kanyHtwjWOnwrKYBiwAmM0p4kLJAnXg==}
     engines: {node: '>=12.0.0'}
@@ -2112,6 +2142,9 @@ packages:
   lodash.once@4.1.1:
     resolution: {integrity: sha512-Sb487aTOCr9drQVL8pIxOzVhafOjZN9UU54hiN8PU3uAiSV7lx1yYNpbNmex2PK6dSJoNTSJUUswT651yww3Mg==}
 
+  lodash@4.18.1:
+    resolution: {integrity: sha512-dMInicTPVE8d1e5otfwmmjlxkZoUpiVLwyeTdUsi/Caj/gfzzblBcCE5sRHV/AsjuCmxWrte2TNGSYuCeCq+0Q==}
+
   log-update@6.1.0:
     resolution: {integrity: sha512-9ie8ItPR6tjY5uYJh8K/Zrv/RMZ5VOlOWvtZdEHYSTFKZfIBPQa9tOAEeAWhd+AnIneLJ22w5fjOYtoutpWq5w==}
     engines: {node: '>=18'}
@@ -2177,6 +2210,10 @@ packages:
 
   mlly@1.8.2:
     resolution: {integrity: sha512-d+ObxMQFmbt10sretNDytwt85VrbkhhUA/JBGm1MPaWJ65Cl4wOgLaB1NYvJSZ0Ef03MMEU/0xpPMXUIQ29UfA==}
+
+  mri@1.2.0:
+    resolution: {integrity: sha512-tzzskb3bG8LvYGFF/mDTpq3jpI6Q9wc3LEmBaghu+DdCssd1FakN7Bc0hVNmEyGq1bq3RgfkCb3cmQLpNPOroA==}
+    engines: {node: '>=4'}
 
   ms@2.1.3:
     resolution: {integrity: sha512-6FlzubTLZG3J2a/NVCAleEhjzq5oxgHyaCU9yYXvcLsvoVaHJq/s5xXI6/XXP6tz7R9xAOtHnSO/tXtF3WRTlA==}
@@ -2582,6 +2619,9 @@ packages:
     resolution: {integrity: sha512-bzyZ1e88w9O1iNJbKnOlvYTrWPDl46O1bG0D3XInv+9tkPrxrN8jUUTiFlDkkmKWgn1M6CfIA13SuGqOa9Korw==}
     engines: {node: '>=14'}
 
+  sisteransi@1.0.5:
+    resolution: {integrity: sha512-bLGGlR1QxBcynn2d5YmDX4MGjlZvy2MRBDRNHLJ8VI6l6+9FUiyTFNJ0IveOSP0bcXgVDPRcfGqA0pjaqUpfVg==}
+
   slice-ansi@7.1.2:
     resolution: {integrity: sha512-iOBWFgUX7caIZiuutICxVgX1SdxwAVFFKwt1EvMYYec/NWO5meOJ6K5uQxhrYBdQJne4KxiqZc+KptFOWFSI9w==}
     engines: {node: '>=18'}
@@ -2963,6 +3003,18 @@ snapshots:
 
   '@cfworker/json-schema@4.1.1': {}
 
+  '@clack/core@1.4.3':
+    dependencies:
+      fast-wrap-ansi: 0.2.2
+      sisteransi: 1.0.5
+
+  '@clack/prompts@1.7.0':
+    dependencies:
+      '@clack/core': 1.4.3
+      fast-string-width: 3.0.2
+      fast-wrap-ansi: 0.2.2
+      sisteransi: 1.0.5
+
   '@colors/colors@1.6.0': {}
 
   '@cspotcode/source-map-support@0.8.1':
@@ -3343,11 +3395,18 @@ snapshots:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.5.5
 
-  '@kaapi/kaapi@0.0.45':
+  '@kaapi/cli@0.0.46':
+    dependencies:
+      '@clack/prompts': 1.7.0
+      lodash: 4.18.1
+      mri: 1.2.0
+      tslib: 2.8.1
+
+  '@kaapi/kaapi@0.0.46':
     dependencies:
       '@hapi/boom': 10.0.1
       '@hapi/hapi': 21.4.9
-      '@kaapi/server': 0.0.45
+      '@kaapi/server': 0.0.46
       '@novice1/api-doc-generator': 1.2.6
       jsontoxml: 1.0.1
       qs: 6.15.2
@@ -3357,27 +3416,40 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@kaapi/server@0.0.45':
+  '@kaapi/oauth2-auth-design@0.0.46(@saurbit/oauth2-jwt@0.1.7(@saurbit/oauth2@0.1.11))(@saurbit/oauth2@0.1.11)':
+    dependencies:
+      '@hapi/boom': 10.0.1
+      '@hapi/hoek': 11.0.7
+      '@kaapi/cli': 0.0.46
+      '@kaapi/kaapi': 0.0.46
+      '@novice1/api-doc-generator': 1.2.6
+      '@saurbit/oauth2': 0.1.11
+      '@saurbit/oauth2-jwt': 0.1.7(@saurbit/oauth2@0.1.11)
+      tslib: 2.8.1
+    transitivePeerDependencies:
+      - supports-color
+
+  '@kaapi/server@0.0.46':
     dependencies:
       '@hapi/boom': 10.0.1
       '@hapi/hapi': 21.4.9
       '@hapi/hoek': 11.0.7
       tslib: 2.8.1
 
-  '@kaapi/validator-arktype@0.0.45(arktype@2.2.0)':
+  '@kaapi/validator-arktype@0.0.46(arktype@2.2.0)':
     dependencies:
       '@hapi/boom': 10.0.1
-      '@kaapi/kaapi': 0.0.45
+      '@kaapi/kaapi': 0.0.46
       '@novice1/api-doc-json-helper': 1.0.9
       arktype: 2.2.0
       tslib: 2.8.1
     transitivePeerDependencies:
       - supports-color
 
-  '@kaapi/validator-zod@0.0.45(zod@4.4.3)':
+  '@kaapi/validator-zod@0.0.46(zod@4.4.3)':
     dependencies:
       '@hapi/boom': 10.0.1
-      '@kaapi/kaapi': 0.0.45
+      '@kaapi/kaapi': 0.0.46
       '@novice1/api-doc-zod-helper': 0.1.10
       tslib: 2.8.1
       zod: 4.4.3
@@ -3518,12 +3590,12 @@ snapshots:
 
   '@rtsao/scc@1.1.0': {}
 
-  '@saurbit/oauth2-jwt@0.1.3(@saurbit/oauth2@0.1.5)':
+  '@saurbit/oauth2-jwt@0.1.7(@saurbit/oauth2@0.1.11)':
     dependencies:
-      '@saurbit/oauth2': 0.1.5
+      '@saurbit/oauth2': 0.1.11
       jose: 6.2.3
 
-  '@saurbit/oauth2@0.1.5': {}
+  '@saurbit/oauth2@0.1.11': {}
 
   '@scalar/client-side-rendering@0.1.7':
     dependencies:
@@ -4433,6 +4505,16 @@ snapshots:
 
   fast-safe-stringify@2.1.1: {}
 
+  fast-string-truncated-width@3.0.3: {}
+
+  fast-string-width@3.0.2:
+    dependencies:
+      fast-string-truncated-width: 3.0.3
+
+  fast-wrap-ansi@0.2.2:
+    dependencies:
+      fast-string-width: 3.0.2
+
   fdir@6.5.0(picomatch@4.0.4):
     optionalDependencies:
       picomatch: 4.0.4
@@ -4870,6 +4952,8 @@ snapshots:
 
   lodash.once@4.1.1: {}
 
+  lodash@4.18.1: {}
+
   log-update@6.1.0:
     dependencies:
       ansi-escapes: 7.3.0
@@ -4936,6 +5020,8 @@ snapshots:
       pathe: 2.0.3
       pkg-types: 1.3.1
       ufo: 1.6.4
+
+  mri@1.2.0: {}
 
   ms@2.1.3: {}
 
@@ -5449,6 +5535,8 @@ snapshots:
       side-channel-weakmap: 1.0.2
 
   signal-exit@4.1.0: {}
+
+  sisteransi@1.0.5: {}
 
   slice-ansi@7.1.2:
     dependencies:

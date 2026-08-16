@@ -1,9 +1,9 @@
+import { KaapiOIDCClientCredentialsFlowBuilder } from "@kaapi/oauth2-auth-design";
 import { VALID_CLIENTS } from "../data/users";
 import { log } from "../services/log-service";
 import { jwksAuthority } from "./jwks";
-import { OIDCClientCredentialsFlowBuilder } from "@saurbit/oauth2";
 
-export const flow = new OIDCClientCredentialsFlowBuilder({
+export const flow = new KaapiOIDCClientCredentialsFlowBuilder({
   securitySchemeName: "clientCredentials",
 })
   .setScopes({
@@ -46,7 +46,7 @@ export const flow = new OIDCClientCredentialsFlowBuilder({
     });
     return { accessToken };
   })
-  .verifyToken(async (_, { token }) => {
+  .tokenVerifier(async (_, { token }) => {
     try {
       const payload = await jwksAuthority.verify(token);
       if (payload && typeof payload.scope === "string") {

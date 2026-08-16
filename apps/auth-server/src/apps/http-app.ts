@@ -1,6 +1,6 @@
 import { PORT, SERVER_BIND_ADDRESS } from "../config/app";
 import { LOG_LEVEL } from "../config/log";
-import { multipleFlowsPlugin } from "../security/plugin";
+import { multipleFlows } from "../security/multiple-flows";
 import { log } from "../services/log-service";
 import Boom from "@hapi/boom";
 import Vision from "@hapi/vision";
@@ -72,8 +72,8 @@ if (isLocalBind) {
 await app.extend([
   // to use zod validation
   validatorZod,
-  // to use the multiple flows security scheme defined with Saurbit OAuth2 library
-  multipleFlowsPlugin,
+  // to use the multiple flows security scheme defined
+  multipleFlows.kaapi().toAuthDesign(),
   // to use Vision for rendering views
   {
     async integrate(t) {
