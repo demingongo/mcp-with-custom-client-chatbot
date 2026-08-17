@@ -1,4 +1,5 @@
-import { McpServer, StdioServerTransport } from '@modelcontextprotocol/server';
+import { McpServer } from '@modelcontextprotocol/server';
+import { StdioServerTransport } from '@modelcontextprotocol/server/stdio';
 import { type } from 'arktype';
 
 // 1. Initialize your MCP Server

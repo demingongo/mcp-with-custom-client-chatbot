@@ -6,7 +6,7 @@
   "license": "MIT",
   "type": "module",
   "scripts": {
-    "build": "tsc --noEmit && tsup src --format esm --outDir dist --clean --metafile --sourcemap",
+    "build": "tsc --noEmit && tsdown src/**/*.ts --format esm --out-dir dist --clean --sourcemap --unbundle --no-fixed-extension",
     "dev": "tsx watch src/index.ts",
     "lint": "eslint .",
     "start": "node dist/index.js"
@@ -16,7 +16,7 @@
     "@hapi/inert": "^7.1.0",
     "@kaapi/kaapi": "^0.0.46",
     "@kaapi/validator-zod": "^0.0.46",
-    "@modelcontextprotocol/server": "^2.0.0-alpha.2",
+    "@modelcontextprotocol/server": "^2.0.0",
     "arktype": "^2.2.0",
     "pino": "^10.3.1",
     "pino-pretty": "^13.1.3",

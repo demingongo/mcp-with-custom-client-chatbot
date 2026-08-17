@@ -233,7 +233,7 @@ export const mcpPostRoute = applyModifiers(
         onPostAuth: {
           method: (request, h) => {
             // Spec §Sending Messages point 2: client MUST include Accept listing both content types.
-            const accept = request.headers.accept ?? "";
+            const accept = request.raw.req.headers.accept ?? "";
             if (
               !accept.includes("*/*") &&
               !(accept.includes("application/json") && accept.includes("text/event-stream"))
@@ -577,7 +577,7 @@ export const mcpGetRoute = applyModifiers(
         onPostAuth: {
           method: (request, h) => {
             // Spec §Sending Messages point 2: client MUST include Accept listing both content types.
-            const accept = request.headers.accept ?? "";
+            const accept = request.raw.req.headers.accept ?? "";
             if (!accept.includes("*/*") && !accept.includes("text/event-stream")) {
               return h
                 .response({
