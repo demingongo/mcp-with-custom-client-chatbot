@@ -1,7 +1,7 @@
-import { KaapiOIDCClientCredentialsFlowBuilder } from "@kaapi/oauth2-auth-design";
 import { VALID_CLIENTS } from "../data/users";
 import { log } from "../services/log-service";
 import { jwksAuthority } from "./jwks";
+import { KaapiOIDCClientCredentialsFlowBuilder } from "@kaapi/oauth2-auth-design";
 
 export const flow = new KaapiOIDCClientCredentialsFlowBuilder({
   securitySchemeName: "clientCredentials",

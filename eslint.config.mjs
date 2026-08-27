@@ -4,8 +4,8 @@ import stylisticJs from "@stylistic/eslint-plugin";
 import typescriptEslint from "@typescript-eslint/eslint-plugin";
 import tsParser from "@typescript-eslint/parser";
 import eslintConfigPrettier from "eslint-config-prettier/flat";
+import { createTypeScriptImportResolver } from "eslint-import-resolver-typescript";
 import { importX } from "eslint-plugin-import-x";
-import { createTypeScriptImportResolver } from 'eslint-import-resolver-typescript'
 import { defineConfig } from "eslint/config";
 import globals from "globals";
 import path from "node:path";
@@ -22,10 +22,7 @@ const compat = new FlatCompat({
 export default defineConfig([
   { ignores: ["lib/", "dist/", "build/", "coverage/", ".husky/", "assets/", "public/"] },
   {
-    extends: compat.extends(
-      "eslint:recommended",
-      "plugin:@typescript-eslint/recommended",
-    ),
+    extends: compat.extends("eslint:recommended", "plugin:@typescript-eslint/recommended"),
     files: ["{src,test}/**/*.ts", "**/*.mts"],
 
     plugins: {
@@ -62,8 +59,8 @@ export default defineConfig([
       "import-x/resolver-next": [
         createTypeScriptImportResolver({
           project: "./tsconfig.json",
-        })
-      ]
+        }),
+      ],
     },
   },
   {

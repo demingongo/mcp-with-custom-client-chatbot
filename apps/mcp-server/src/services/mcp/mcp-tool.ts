@@ -1,9 +1,11 @@
-import { core, util, z, ZodObject } from 'zod';
-import { JsonRpcId, JsonRpcResponse, McpToolDefinition, McpToolInputSchema } from '../../types';
-import { rpcError, toolResult, success } from './json-rpc-helpers';
+import { JsonRpcId, JsonRpcResponse, McpToolDefinition, McpToolInputSchema } from "../../types";
+import { rpcError, toolResult, success } from "./json-rpc-helpers";
+import { core, util, z, ZodObject } from "zod";
 
-export type ZodSchema<T extends core.$ZodLooseShape = Partial<Record<never, core.SomeType>>> =
-  ZodObject<util.Writeable<T>, core.$strip | core.$loose>;
+export type ZodSchema<T extends core.$ZodLooseShape = Partial<Record<never, core.SomeType>>> = ZodObject<
+  util.Writeable<T>,
+  core.$strip | core.$loose
+>;
 
 export interface McpToolOptions<R = unknown> {
   preResponse?: (id: JsonRpcId | undefined, result: R) => Promise<JsonRpcResponse> | JsonRpcResponse;
@@ -17,7 +19,6 @@ export class McpTool<R = unknown, T extends core.$ZodLooseShape = Partial<Record
   #preResponse?: (id: JsonRpcId | undefined, result: R) => Promise<JsonRpcResponse> | JsonRpcResponse;
   #schema?: ZodSchema<T>;
   #title?: string;
-
 
   constructor(
     name: string,
@@ -52,12 +53,11 @@ export class McpTool<R = unknown, T extends core.$ZodLooseShape = Partial<Record
       return {
         ...jsonSchema,
         type: "object",
-        properties: jsonSchema.properties || {}
-      }
+        properties: jsonSchema.properties || {},
+      };
     }
     throw new Error("Input schema must be an object");
   }
-
 
   async call(id: JsonRpcId | undefined, args: unknown): Promise<JsonRpcResponse> {
     if (this.#schema) {
@@ -77,19 +77,21 @@ export class McpTool<R = unknown, T extends core.$ZodLooseShape = Partial<Record
   }
 }
 
-
 export interface Credentials {
   app?: unknown;
   user?: unknown;
   scope?: unknown;
 }
 
-export type Controller<A = unknown, R = unknown, C extends Credentials = Credentials> = (args: A, creds: C) => Promise<R> | R;
+export type Controller<A = unknown, R = unknown, C extends Credentials = Credentials> = (
+  args: A,
+  creds: C
+) => Promise<R> | R;
 
 export class McpToolOptionalArgs<
   R = unknown,
   T extends core.$ZodLooseShape = Partial<Record<never, core.SomeType>>,
-  C extends Credentials = Credentials
+  C extends Credentials = Credentials,
 > {
   #description: string;
   #name: string;
@@ -145,8 +147,8 @@ export class McpToolOptionalArgs<
       return {
         ...jsonSchema,
         type: jsonSchema.type,
-        properties: jsonSchema.properties || {}
-      }
+        properties: jsonSchema.properties || {},
+      };
     }
     throw new Error("Input schema must be an object");
   }
@@ -176,10 +178,7 @@ export class McpToolOptionalArgs<
   }
 }
 
-export class McpToolBase<
-  R = unknown,
-  C extends Credentials = Credentials
-> {
+export class McpToolBase<R = unknown, C extends Credentials = Credentials> {
   protected ctrl: Controller<unknown, R, C>;
   protected preResponse?: (id: JsonRpcId | undefined, result: R) => Promise<JsonRpcResponse> | JsonRpcResponse;
   protected definition: McpToolDefinition;
@@ -233,7 +232,7 @@ export class McpToolBase<
 export class McpToolWithZod<
   R = unknown,
   T extends core.$ZodLooseShape = Partial<Record<never, core.SomeType>>,
-  C extends Credentials = Credentials
+  C extends Credentials = Credentials,
 > extends McpToolBase<R, C> {
   #schema?: ZodSchema<T> | undefined | null;
 
@@ -263,11 +262,17 @@ export class McpToolWithZod<
       throw new Error("Input schema must be an object");
     }
 
-    super(name, description, {
-      ...jsonSchema,
-      type: jsonSchema.type,
-      properties: jsonSchema.properties || {}
-    }, ctrl as Controller<unknown, R, C>, options);
+    super(
+      name,
+      description,
+      {
+        ...jsonSchema,
+        type: jsonSchema.type,
+        properties: jsonSchema.properties || {},
+      },
+      ctrl as Controller<unknown, R, C>,
+      options
+    );
     this.#schema = schema;
   }
 
@@ -297,8 +302,8 @@ const tool = new McpToolWithZod(
     title: "Echo Tool",
     preResponse: async (id, result) => {
       return success(id, toolResult(result));
-    }
+    },
   }
-)
+);
 
-tool.call("1", { message: "Hello, world!" }, { user: { id: "123", name: "Alice" } })
+tool.call("1", { message: "Hello, world!" }, { user: { id: "123", name: "Alice" } });

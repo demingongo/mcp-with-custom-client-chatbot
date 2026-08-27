@@ -1,14 +1,17 @@
 import { APP_NAME } from "../../config/app";
-import type {
-  JsonRpcId,
-  JsonRpcRequest,
-  JsonRpcResponse,
-  McpToolDefinition,
-  Session,
-} from "../../types";
-import { success, rpcError, toolResult } from "./json-rpc-helpers";
+import type { JsonRpcId, JsonRpcRequest, JsonRpcResponse, McpToolDefinition, Session } from "../../types";
 import { log } from "../log-service";
-import { listProducts, productByIdArgsSchema, getProductById, searchProducts, searchProductsArgsSchema, filterByCategoryArgsSchema, filterByCategory, listCategories } from "../product-service";
+import {
+  listProducts,
+  productByIdArgsSchema,
+  getProductById,
+  searchProducts,
+  searchProductsArgsSchema,
+  filterByCategoryArgsSchema,
+  filterByCategory,
+  listCategories,
+} from "../product-service";
+import { success, rpcError, toolResult } from "./json-rpc-helpers";
 import { randomUUID } from "node:crypto";
 
 // ---------------------------------------------------------------------------
@@ -144,7 +147,7 @@ async function handleToolsCall(id: JsonRpcId | undefined, params: unknown, sessi
     }
 
     case "get_product": {
-      const val = await productByIdArgsSchema.safeParseAsync(args)
+      const val = await productByIdArgsSchema.safeParseAsync(args);
       if (!val.success) {
         return rpcError(id, -32602, `Invalid arguments: ${val.error.message}`);
       }
@@ -156,7 +159,7 @@ async function handleToolsCall(id: JsonRpcId | undefined, params: unknown, sessi
     }
 
     case "search_products": {
-      const val = await searchProductsArgsSchema.safeParseAsync(args)
+      const val = await searchProductsArgsSchema.safeParseAsync(args);
       if (!val.success) {
         return rpcError(id, -32602, `Invalid arguments: ${val.error.message}`);
       }
@@ -170,7 +173,7 @@ async function handleToolsCall(id: JsonRpcId | undefined, params: unknown, sessi
     }
 
     case "products_by_category": {
-      const val = await filterByCategoryArgsSchema.safeParseAsync(args)
+      const val = await filterByCategoryArgsSchema.safeParseAsync(args);
       if (!val.success) {
         return rpcError(id, -32602, `Invalid arguments: ${val.error.message}`);
       }

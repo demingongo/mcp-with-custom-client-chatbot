@@ -1,8 +1,8 @@
-import { createClientResolver, KaapiOIDCAuthorizationCodeFlowBuilder } from "@kaapi/oauth2-auth-design";
 import { REGISTERED_USERS, VALID_CLIENTS } from "../data/users";
 import { log } from "../services/log-service";
 import { jwksAuthority } from "./jwks";
 import Boom from "@hapi/boom";
+import { createClientResolver, KaapiOIDCAuthorizationCodeFlowBuilder } from "@kaapi/oauth2-auth-design";
 
 const codeStorage: Record<
   string,
@@ -31,13 +31,13 @@ export const flow = new KaapiOIDCAuthorizationCodeFlowBuilder({
   securitySchemeName: "oidc-auth-code",
   parseAuthorizationEndpointData: async (req) => {
     const payload = req.payload as Record<string, unknown>;
-    const username = typeof payload?.username === 'string' ? payload.username : undefined;
-    const password = typeof payload?.password === 'string' ? payload.password : undefined;
+    const username = typeof payload?.username === "string" ? payload.username : undefined;
+    const password = typeof payload?.password === "string" ? payload.password : undefined;
     return {
       username,
       password,
     };
-  }
+  },
 })
   .setScopes({
     openid: "OpenID Connect scope",
@@ -75,7 +75,7 @@ export const flow = new KaapiOIDCAuthorizationCodeFlowBuilder({
     };
   })
   .setLoginFormRenderer(async (_req, h, _result, { statusCode, errorMessage }) => {
-    return h.view('login', { errorMessage }).code(statusCode);
+    return h.view("login", { errorMessage }).code(statusCode);
   })
   .getUserForAuthentication((_ctxt, parsedData) => {
     const user = REGISTERED_USERS.find((u) => u.username === parsedData.username && u.password === parsedData.password);
@@ -139,7 +139,9 @@ export const flow = new KaapiOIDCAuthorizationCodeFlowBuilder({
         return {
           id: client.client_id,
           grants:
-            client.meta && "grant_types" in client.meta ? (client.meta.grant_types as string[]) : ["authorization_code"],
+            client.meta && "grant_types" in client.meta
+              ? (client.meta.grant_types as string[])
+              : ["authorization_code"],
           redirectUris: client.meta && "redirect_uris" in client.meta ? (client.meta.redirect_uris as string[]) : [],
           scopes: client.allowed_scopes,
           metadata: {
@@ -189,7 +191,9 @@ export const flow = new KaapiOIDCAuthorizationCodeFlowBuilder({
         return {
           id: client.client_id,
           grants:
-            client.meta && "grant_types" in client.meta ? (client.meta.grant_types as string[]) : ["authorization_code"],
+            client.meta && "grant_types" in client.meta
+              ? (client.meta.grant_types as string[])
+              : ["authorization_code"],
           redirectUris: client.meta && "redirect_uris" in client.meta ? (client.meta.redirect_uris as string[]) : [],
           scopes: client.allowed_scopes,
           metadata: {
@@ -200,7 +204,7 @@ export const flow = new KaapiOIDCAuthorizationCodeFlowBuilder({
             userFullName: user.fullName,
           },
         };
-      }
+      },
     })(tokenRequest);
   })
   .generateAccessToken(async (grantContext) => {

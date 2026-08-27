@@ -1,5 +1,4 @@
 // JSON-RPC 2.0 base types
-
 import { OpenAPIV3_1 } from "openapi-types";
 
 export type JsonRpcId = string | number;

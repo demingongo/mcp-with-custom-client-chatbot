@@ -6,16 +6,16 @@
   "license": "MIT",
   "type": "module",
   "scripts": {
-    "build": "tsc --noEmit && tsdown src/**/*.ts --format esm --out-dir dist --clean --sourcemap --unbundle --no-fixed-extension",
+    "build": "tsc --noEmit && tsdown src/*.ts src/**/*.ts --format esm --out-dir dist --clean --sourcemap --unbundle --no-fixed-extension",
     "dev": "tsx watch src/index.ts",
     "lint": "eslint .",
     "start": "node dist/index.js"
   },
   "dependencies": {
     "@hapi/boom": "^10.0.1",
-    "@hapi/inert": "^7.1.0",
-    "@kaapi/kaapi": "^0.0.46",
-    "@kaapi/validator-zod": "^0.0.46",
+    "@hapi/inert": "^7.1.2",
+    "@kaapi/kaapi": "^0.0.48",
+    "@kaapi/validator-zod": "^0.0.48",
     "@modelcontextprotocol/server": "^2.0.0",
     "arktype": "^2.2.0",
     "pino": "^10.3.1",

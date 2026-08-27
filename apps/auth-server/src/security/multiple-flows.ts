@@ -1,8 +1,8 @@
-import { KaapiOIDCMultipleFlowsBuilder } from "@kaapi/oauth2-auth-design";
+import { EXTERNAL_URI } from "../config/app";
 import { flow as authCodeFlow } from "./authorization-code";
 import { flow as clientCredentialsFlow } from "./client-credentials";
 import { jwksAuthority } from "./jwks";
-import { EXTERNAL_URI } from "../config/app";
+import { KaapiOIDCMultipleFlowsBuilder } from "@kaapi/oauth2-auth-design";
 
 const flows = [authCodeFlow, clientCredentialsFlow];
 

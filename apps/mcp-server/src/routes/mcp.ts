@@ -190,10 +190,11 @@ export const toolsV2Route: KaapiServerRoute = {
   },
 };
 
-
 export const invokeRoute: KaapiServerRoute = {
   handler: (_request, h) => {
-    return h.response({ ok: false, tool: "not_implemented", error: "Tool invocation is not implemented yet." }).code(501);
+    return h
+      .response({ ok: false, tool: "not_implemented", error: "Tool invocation is not implemented yet." })
+      .code(501);
     /*
     const body = request.payload as McpRequest;
     const tool = body?.tool;
@@ -257,4 +258,3 @@ export const invokeRoute: KaapiServerRoute = {
     id: "mcp_invoke_tool",
   },
 };
-

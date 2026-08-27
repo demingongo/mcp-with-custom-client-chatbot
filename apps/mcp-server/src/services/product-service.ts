@@ -2,7 +2,7 @@ import { Product, ProductCatalog } from "../types-products";
 import { log } from "./log-service";
 import fs from "fs";
 import path from "path";
-import { z } from 'zod';
+import { z } from "zod";
 
 const DATA_PATH = path.join(process.cwd(), "data", "products.json");
 
@@ -40,7 +40,9 @@ export function getProductById(args: z.infer<typeof productByIdArgsSchema>): Pro
 }
 
 export const searchProductsArgsSchema = z.object({
-  query: z.string().optional()
+  query: z
+    .string()
+    .optional()
     .describe("A keyword or phrase to search for in product names, descriptions, categories, features, and use cases."),
 });
 
