@@ -99,3 +99,18 @@ MCP server:
 - `GET  /mcp/tools` — tool definitions
 - `POST /mcp/invoke` — body `{ tool, arguments }`
 - `GET  /products`, `/products/:id`, `/products/search?q=`, `/products/categories`
+
+## MCP inspector
+
+The MCP inspector allows you to inspect the tools and endpoints available on the MCP server. You can access it via:
+
+```bash
+docker run --rm \
+  -p 127.0.0.1:6274:6274 \
+  -p 127.0.0.1:6277:6277 \
+  -e HOST=0.0.0.0 \
+  -e MCP_AUTO_OPEN_ENABLED=false \
+  ghcr.io/modelcontextprotocol/inspector:latest
+```
+
+Open http://localhost:6274 for the MCP inspector.
