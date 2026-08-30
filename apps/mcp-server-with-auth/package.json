@@ -13,9 +13,9 @@
   },
   "dependencies": {
     "@hapi/boom": "^10.0.1",
-    "@kaapi/kaapi": "^0.0.50",
-    "@kaapi/logger-pino": "^0.0.50",
-    "@kaapi/validator-zod": "^0.0.50",
+    "@kaapi/kaapi": "^0.0.51",
+    "@kaapi/logger-pino": "^0.0.51",
+    "@kaapi/validator-zod": "^0.0.51",
     "@novice1/api-doc-generator": "^1.2.x",
     "hapi-scalar": "^1.1.0",
     "jsonwebtoken": "^9.0.3",

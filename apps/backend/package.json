@@ -14,8 +14,8 @@
   "dependencies": {
     "@cfworker/json-schema": "^4.1.1",
     "@hapi/boom": "^10.0.1",
-    "@kaapi/kaapi": "^0.0.50",
-    "@kaapi/validator-arktype": "^0.0.50",
+    "@kaapi/kaapi": "^0.0.51",
+    "@kaapi/validator-arktype": "^0.0.51",
     "@modelcontextprotocol/client": "^2.0.0",
     "arktype": "^2.2.0",
     "hapi-scalar": "^1.1.0",

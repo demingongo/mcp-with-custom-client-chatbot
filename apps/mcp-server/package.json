@@ -14,8 +14,8 @@
   "dependencies": {
     "@hapi/boom": "^10.0.1",
     "@hapi/inert": "^7.1.2",
-    "@kaapi/kaapi": "^0.0.50",
-    "@kaapi/validator-zod": "^0.0.50",
+    "@kaapi/kaapi": "^0.0.51",
+    "@kaapi/validator-zod": "^0.0.51",
     "@modelcontextprotocol/server": "^2.0.0",
     "arktype": "^2.2.0",
     "pino": "^10.3.1",
