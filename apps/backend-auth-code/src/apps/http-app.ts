@@ -7,7 +7,6 @@ import {
   PORT,
   SERVER_BIND_ADDRESS,
 } from "../config/app";
-import { LOG_LEVEL } from "../config/log";
 import { apiKeyAuthDesign } from "../security/api-key";
 import { log } from "../services/log-service";
 import { Kaapi } from "@kaapi/kaapi";
@@ -22,9 +21,7 @@ export const app = new Kaapi({
   host: SERVER_BIND_ADDRESS,
 
   // internal logger options
-  loggerOptions: {
-    level: LOG_LEVEL,
-  },
+  logger: log,
 
   // CORS configuration for all routes
   routes: {

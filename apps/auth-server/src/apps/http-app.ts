@@ -1,6 +1,6 @@
 import { PORT, SERVER_BIND_ADDRESS } from "../config/app";
 import { multipleFlows } from "../security/multiple-flows";
-import { log, logger } from "../services/log-service";
+import { log } from "../services/log-service";
 import Boom from "@hapi/boom";
 import Vision from "@hapi/vision";
 import { Kaapi } from "@kaapi/kaapi";
@@ -16,7 +16,7 @@ export const app = new Kaapi({
   host: SERVER_BIND_ADDRESS,
 
   // internal logger options
-  logger: logger,
+  logger: log,
 
   // CORS configuration for all routes
   routes: {
