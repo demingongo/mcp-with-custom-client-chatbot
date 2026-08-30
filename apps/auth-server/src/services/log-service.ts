@@ -1,3 +1,4 @@
+import { ILogger } from "@kaapi/kaapi";
 import { LOG_LEVEL } from "../config/log";
 import pino from "pino";
 
@@ -83,3 +84,5 @@ export const log = pino({
       }
       : undefined!,
 });
+
+export const logger = log as pino.Logger<"silly" | "verbose" | "warning" | "err", false> & ILogger

@@ -1,9 +1,9 @@
 import { PORT, SERVER_BIND_ADDRESS } from "../config/app";
 import { multipleFlows } from "../security/multiple-flows";
-import { log } from "../services/log-service";
+import { log, logger } from "../services/log-service";
 import Boom from "@hapi/boom";
 import Vision from "@hapi/vision";
-import { ILogger, Kaapi } from "@kaapi/kaapi";
+import { Kaapi } from "@kaapi/kaapi";
 import { validatorZod } from "@kaapi/validator-zod";
 import path from "path";
 import Pug from "pug";
@@ -16,7 +16,7 @@ export const app = new Kaapi({
   host: SERVER_BIND_ADDRESS,
 
   // internal logger options
-  logger: log as unknown as ILogger,
+  logger: logger,
 
   // CORS configuration for all routes
   routes: {
