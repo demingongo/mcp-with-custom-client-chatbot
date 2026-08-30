@@ -7,6 +7,12 @@ export const log = createPinoLogger({
     LOG_LEVEL === "debug"
       ? {
         target: "pino-pretty",
+        options: {
+          colorize: true,
+          customLevels: 'verbose:25',
+          customColors: 'verbose:cyan',
+          useOnlyCustomProps: false
+        }
       }
-      : undefined!,
+      : undefined,
 });
